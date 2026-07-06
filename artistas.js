@@ -32,7 +32,7 @@ function typeLabel(person) {
 }
 function card(person) {
   const key = person.slug || slugify(person.name);
-  return `<a class="artist-card" href="artistas.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(typeLabel(person))}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
+  return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(typeLabel(person))}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
 }
 function mountFilters() {
   if (document.querySelector("#artistTypeFilters")) return;
