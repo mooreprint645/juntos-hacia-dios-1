@@ -37,14 +37,21 @@
     await apRefresh(editingId ? "Categoría actualizada." : "Categoría guardada.");
   }, true);
 
-  const addSongCategorySearch = () => {
-    if (document.querySelector("script[data-song-category-search]")) return;
+  const loadScript = (source, marker, done) => {
+    if (document.querySelector(`script[${marker}]`)) return done?.();
     const script = document.createElement("script");
-    script.dataset.songCategorySearch = "true";
-    script.src = "admin-song-category-search.js?v=2";
+    script.setAttribute(marker, "true");
+    script.src = source;
+    script.onload = () => done?.();
     document.head.append(script);
   };
 
-  if (document.readyState === "complete") addSongCategorySearch();
-  else window.addEventListener("load", addSongCategorySearch, { once: true });
+  const loadSongPickers = () => {
+    loadScript("admin-song-category-search.js?v=2", "data-song-category-search", () => {
+      loadScript("admin-song-category-picker.js?v=1", "data-song-category-picker");
+    });
+  };
+
+  if (document.readyState === "complete") loadSongPickers();
+  else window.addEventListener("load", loadSongPickers, { once: true });
 })();
