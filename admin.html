@@ -1,67 +1,54 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Admin | Juntos Hacia Dios</title>
-  <meta name="description" content="Panel de administración para Juntos Hacia Dios." />
-  <link rel="stylesheet" href="style.css?v=2" />
+  <meta name="description" content="Panel de administración de Juntos Hacia Dios.">
+  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="admin-pro.css?v=1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=1"></script>
-  <script src="admin.js?v=4" defer></script>
+  <script src="admin-pro.js?v=1" defer></script>
 </head>
 <body>
   <header>
     <nav class="navbar">
-      <a class="brand" href="index.html"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
-      <button class="menu-toggle" id="menuToggle" type="button">☰</button>
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
       <div class="nav-menu" id="navMenu">
-        <a href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="donaciones.html">Donaciones</a><a href="admin.html" class="active">Admin</a>
-        <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html">Canciones</a>
+        <a href="artistas.html">Artistas</a>
+        <a href="categorias.html">Categorías</a>
+        <a href="albumes.html">Álbumes</a>
+        <a href="donaciones.html">Donaciones</a>
+        <a class="active" href="admin.html">Admin</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
       </div>
     </nav>
   </header>
-
-  <main>
-    <section class="hero"><div class="hero-content"><p class="hero-kicker">Panel privado</p><h1>Administración</h1><p>Inicia sesión para gestionar canciones, artistas, categorías y relaciones.</p></div></section>
-
-    <section class="section" id="loginSection">
-      <article class="intro-card">
-        <p class="hero-kicker">Acceso</p><h2>Entrar al panel</h2>
-        <form class="admin-form" id="loginForm">
-          <input type="email" name="email" placeholder="Correo" required />
-          <input type="password" name="password" placeholder="Contraseña" required />
-          <button class="song-btn" type="submit">Iniciar sesión</button>
-        </form>
-        <p class="muted-text" id="loginMessage"></p>
-      </article>
+  <main class="admin-page">
+    <section class="admin-hero">
+      <p class="hero-kicker">Panel privado</p>
+      <h1>Administración</h1>
+      <p>Gestiona artistas, categorías, álbumes, canciones, versiones con capo, enlaces y datos de donación desde un mismo lugar.</p>
     </section>
-
-    <section class="section hidden" id="adminPanel">
-      <div class="section-heading split-heading"><div><p class="hero-kicker">Panel</p><h2>Gestión de contenido</h2></div><button class="song-btn secondary" id="logoutButton" type="button">Cerrar sesión</button></div>
-      <div class="quick-cards">
-        <article class="quick-card"><h3>Nueva canción</h3><form class="admin-form" id="songForm"><input name="title" placeholder="Título" required /><input name="tone" placeholder="Tono" /><select name="song_type"><option value="">Tipo</option><option value="catolico">Católico</option><option value="cristiano">Cristiano</option><option value="mixto">Mixto</option></select><textarea name="lyrics" rows="8" placeholder="Letra"></textarea><button class="song-btn" type="submit">Guardar canción</button></form></article>
-        <article class="quick-card"><h3>Nuevo artista</h3><form class="admin-form" id="artistForm"><input name="name" placeholder="Nombre" required /><select name="artist_type"><option value="">Tipo</option><option value="catolico">Católico</option><option value="cristiano">Cristiano</option><option value="mixto">Mixto</option></select><textarea name="description" rows="5" placeholder="Descripción"></textarea><button class="song-btn" type="submit">Guardar artista</button></form></article>
-        <article class="quick-card"><h3>Nueva categoría</h3><form class="admin-form" id="categoryForm"><input name="name" placeholder="Nombre" required /><select name="song_type"><option value="">Tipo</option><option value="catolico">Católico</option><option value="cristiano">Cristiano</option><option value="mixto">Mixto</option></select><textarea name="description" rows="5" placeholder="Descripción"></textarea><button class="song-btn" type="submit">Guardar categoría</button></form></article>
-      </div>
+    <section class="admin-login-card" id="adminLoginSection">
+      <h2>Entrar al panel</h2>
+      <p class="admin-note">Escribe tu correo autorizado. Recibirás un enlace seguro para iniciar sesión.</p>
+      <form class="admin-form" id="adminLoginForm">
+        <label>Correo<input type="email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com"></label>
+        <button class="song-btn" type="submit">Enviar enlace de acceso</button>
+      </form>
+      <p class="muted-text" id="adminLoginMessage"></p>
     </section>
-
-    <section class="section hidden" id="relationsPanel">
-      <div class="section-heading"><p class="hero-kicker">Relaciones</p><h2>Unir canción con artista y categoría</h2></div>
-      <div class="quick-cards">
-        <article class="quick-card"><h3>Asignar artista</h3><form class="admin-form" id="songArtistForm"><select name="song_id" id="songArtistSong" required></select><select name="artist_id" id="songArtistArtist" required></select><button class="song-btn" type="submit">Unir artista</button></form></article>
-        <article class="quick-card"><h3>Asignar categoría</h3><form class="admin-form" id="songCategoryForm"><select name="song_id" id="songCategorySong" required></select><select name="category_id" id="songCategoryCategory" required></select><button class="song-btn" type="submit">Unir categoría</button></form></article>
-      </div>
-    </section>
-
-    <section class="section hidden" id="recentPanel">
-      <div class="section-heading split-heading"><div><p class="hero-kicker">Estado</p><h2>Registros recientes</h2></div><button class="song-btn secondary" id="refreshAdmin" type="button">Actualizar</button></div>
-      <div class="songs-grid" id="adminRecent"><article class="song-card"><h3>Cargando...</h3><p>Un momento por favor.</p></article></div>
-      <p class="muted-text" id="adminMessage"></p>
-    </section>
+    <section id="adminWorkspace" class="admin-hidden" aria-live="polite"></section>
   </main>
-
-  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a></p></footer>
-  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear()</script>
 </body>
 </html>
