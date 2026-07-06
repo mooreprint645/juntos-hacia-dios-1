@@ -1,0 +1,9 @@
+@media (min-width:481px) and (max-width:850px){
+  .navbar{width:min(100% - 18px,var(--max));min-height:56px;gap:8px}
+  .menu-toggle{display:none!important}
+  .nav-menu{display:flex!important;position:static;top:auto;left:auto;right:auto;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;flex-direction:row!important;align-items:center!important;gap:2px!important;min-width:0}
+  .nav-menu a{padding:6px 5px!important;font-size:.62rem!important;line-height:1.1;white-space:nowrap;text-align:left!important}
+  .theme-toggle{width:28px!important;height:28px!important;font-size:.72rem!important;flex:0 0 auto}
+  .brand{gap:6px;font-size:.75rem;white-space:nowrap}
+  .brand-icon{width:23px;height:23px;border-radius:8px;font-size:.78rem}
+}
