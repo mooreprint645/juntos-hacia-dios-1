@@ -40,15 +40,100 @@ function setSongError(message) {
 }
 
 function names(items) { return (items || []).map((item) => item?.name || item?.title || "").filter(Boolean).join(" · "); }
+function categoryKey(category) { return category?.slug || category?.id || ""; }
+function categoryPath(category, allCategories) {
+  const path = [];
+  const seen = new Set();
+  let current = category;
+  while (current && !seen.has(String(current.id))) {
+    seen.add(String(current.id));
+    path.unshift(current);
+    current = (allCategories || []).find((item) => String(item.id) === String(current.parent_id));
+  }
+  return path;
+}
+function localReferrer() {
+  try {
+    const url = new URL(document.referrer || "");
+    return url.origin === location.origin && !url.pathname.endsWith("/cancion.html") ? url : null;
+  } catch (_) { return null; }
+}
+function prepareReaderToolbar() {
+  const meta = $("#songMeta");
+  if (!meta) return null;
+  let toolbar = $("#songReaderToolbar");
+  if (!toolbar) {
+    toolbar = document.createElement("aside");
+    toolbar.id = "songReaderToolbar";
+    toolbar.className = "song-reader-toolbar";
+    meta.parentElement?.insertBefore(toolbar, meta);
+    toolbar.append(meta);
+  }
+  if (!$("#songBackBar")) {
+    const back = document.createElement("div");
+    back.id = "songBackBar";
+    back.className = "song-back-bar";
+    toolbar.prepend(back);
+  }
+  return toolbar;
+}
+function renderReaderNavigation(song, relations) {
+  const primaryCategory = (relations.categories || [])[0];
+  const path = primaryCategory ? categoryPath(primaryCategory, relations.categoryTree || []) : [];
+  const hero = document.querySelector(".hero .hero-content");
+  let breadcrumb = $("#songBreadcrumb");
+  if (!breadcrumb && hero) {
+    breadcrumb = document.createElement("nav");
+    breadcrumb.id = "songBreadcrumb";
+    breadcrumb.className = "song-breadcrumb";
+    breadcrumb.setAttribute("aria-label", "Ruta de navegación");
+    hero.prepend(breadcrumb);
+  }
+  if (breadcrumb) {
+    const crumbs = [
+      `<a href="index.html">Inicio</a>`,
+      `<span>›</span>`,
+      `<a href="canciones.html">Canciones</a>`,
+      ...path.flatMap((item, index) => {
+        const finalCategory = index === path.length - 1;
+        const key = encodeURIComponent(categoryKey(item));
+        const href = finalCategory ? `categorias.html?categoria=${key}` : `categorias.html?carpeta=${key}`;
+        return [`<span>›</span>`, `<a href="${href}">${escapeHTML(item.name || "Categoría")}</a>`];
+      }),
+      `<span>›</span>`,
+      `<span aria-current="page">${escapeHTML(song.title || "Canción")}</span>`
+    ];
+    breadcrumb.innerHTML = crumbs.join("");
+  }
+
+  const toolbar = prepareReaderToolbar();
+  const backBar = $("#songBackBar");
+  if (!toolbar || !backBar) return;
+  const referrer = localReferrer();
+  const pathName = referrer?.pathname.split("/").pop() || "";
+  const fallback = referrer ? `${referrer.pathname}${referrer.search}${referrer.hash}` : primaryCategory ? `categorias.html?categoria=${encodeURIComponent(categoryKey(primaryCategory))}` : "canciones.html";
+  const label = pathName === "categorias.html" ? "← Volver a Categorías" : pathName === "artista.html" || pathName === "artistas.html" ? "← Volver al artista" : pathName === "albumes.html" ? "← Volver al álbum" : "← Volver a Canciones";
+  backBar.innerHTML = `<a class="song-back-link" id="songBackLink" href="${fallback}">${label}</a>`;
+  $("#songBackLink")?.addEventListener("click", (event) => {
+    if (referrer && history.length > 1) { event.preventDefault(); history.back(); }
+  });
+}
 
 async function loadRelations(songId) {
-  const [artistRes, categoryRes, linksRes, capoRes] = await Promise.all([
+  const [artistRes, categoryRes, linksRes, capoRes, allCategoriesRes] = await Promise.all([
     client.from("song_artists").select("artists(id,name,slug,artist_type)").eq("song_id", songId),
-    client.from("song_categories").select("categories(id,name,slug,song_type)").eq("song_id", songId),
+    client.from("song_categories").select("categories(id,name,slug,song_type,parent_id)").eq("song_id", songId),
     client.from("song_links").select("*").eq("song_id", songId).order("sort_order", { ascending: true }),
-    client.from("song_capo_versions").select("*").eq("song_id", songId).order("sort_order", { ascending: true })
+    client.from("song_capo_versions").select("*").eq("song_id", songId).order("sort_order", { ascending: true }),
+    client.from("categories").select("id,name,slug,parent_id,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true })
   ]);
-  return { artists: (artistRes.data || []).map((row) => row.artists).filter(Boolean), categories: (categoryRes.data || []).map((row) => row.categories).filter(Boolean), links: linksRes.data || [], capos: capoRes.data || [] };
+  return {
+    artists: (artistRes.data || []).map((row) => row.artists).filter(Boolean),
+    categories: (categoryRes.data || []).map((row) => row.categories).filter(Boolean),
+    links: linksRes.data || [],
+    capos: capoRes.data || [],
+    categoryTree: allCategoriesRes.data || []
+  };
 }
 
 function renderChordLyrics() {
@@ -73,8 +158,8 @@ function renderChordLyrics() {
 }
 
 function renderControls(relations) {
-  const meta = $("#songMeta");
-  if (!meta || $("#transposeBox")) return;
+  const toolbar = prepareReaderToolbar();
+  if (!toolbar || $("#transposeBox")) return;
   const versions = relations.capos || [];
   const mainCapo = Number(currentSong.capo_position || 0);
   const mainKey = currentSong.capo_key || "";
@@ -85,7 +170,7 @@ function renderControls(relations) {
     const label = item.label || `Capo ${position}${key ? ` · Figuras en ${key}` : ""}`;
     return `<button class="song-btn small-btn" data-position="${position}" data-key="${escapeHTML(key)}" data-label="${escapeHTML(label)}">${escapeHTML(label)}</button>`;
   }).join("");
-  meta.insertAdjacentHTML("afterend", `<div class="transpose-box" id="transposeBox"><button class="song-btn small-btn" data-tone="-1">Bajar tono</button><span id="transposeStatus">Tono original · Sin capo</span><button class="song-btn small-btn" data-tone="1">Subir tono</button><button class="song-btn small-btn secondary" data-tone="0">Original</button></div><div class="song-filters" id="capoControls"><button class="filter-btn active" data-position="0" data-key="" data-label="Sin capo">Sin capo</button>${mainButton}${versionButtons}</div>`);
+  toolbar.insertAdjacentHTML("beforeend", `<div class="song-reader-controls"><div class="transpose-box" id="transposeBox"><button class="song-btn small-btn" data-tone="-1">Bajar tono</button><span id="transposeStatus">Tono original · Sin capo</span><button class="song-btn small-btn" data-tone="1">Subir tono</button><button class="song-btn small-btn secondary" data-tone="0">Original</button></div><div class="song-filters" id="capoControls"><button class="filter-btn active" data-position="0" data-key="" data-label="Sin capo">Sin capo</button>${mainButton}${versionButtons}</div></div>`);
   $("#transposeBox").querySelectorAll("[data-tone]").forEach((button) => button.addEventListener("click", () => { const value = Number(button.dataset.tone); transpose = value === 0 ? 0 : transpose + value; renderChordLyrics(); }));
   $("#capoControls").querySelectorAll("[data-position]").forEach((button) => button.addEventListener("click", () => { capoShift = capoOffset(button.dataset.position, button.dataset.key); capoLabel = button.dataset.label || "Sin capo"; $("#capoControls").querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button)); renderChordLyrics(); }));
 }
@@ -112,6 +197,7 @@ function renderSong(song, relations) {
   $("#songType").textContent = type;
   $("#songTitle").textContent = title;
   $("#songSubtitle").textContent = artistText ? `Por ${artistText}` : "Canción del cancionero.";
+  renderReaderNavigation(song, relations);
   renderMeta(song, relations);
   renderControls(relations);
   renderChordLyrics();
