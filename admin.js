@@ -32,4 +32,7 @@ function options(items) { return '<option value="">Seleccionar...</option>' + it
 function fill() { const so = options(songs), ao = options(artists), co = options(categories); if ($("#songArtistSong")) $("#songArtistSong").innerHTML = so; if ($("#songCategorySong")) $("#songCategorySong").innerHTML = so; if ($("#songArtistArtist")) $("#songArtistArtist").innerHTML = ao; if ($("#songCategoryCategory")) $("#songCategoryCategory").innerHTML = co; }
 function renderRecent() { const box = $("#adminRecent"); if (!box) return; box.innerHTML = songs.length ? songs.slice(0, 6).map((s) => `<article class="song-card"><h3>${esc(s.title || "Sin título")}</h3><p>${esc(s.song_type || "Canción")}${s.tone ? ` · Tono ${esc(s.tone)}` : ""}</p></article>`).join("") : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay registros.</p></article>"; }
 async function refresh() { const [a, b, c] = await Promise.all([client.from("songs").select("*").order("created_at", { ascending: false }).limit(50), client.from("artists").select("*").order("name", { ascending: true }).limit(200), client.from("categories").select("*").order("name", { ascending: true }).limit(200)]); songs = a.data || []; artists = b.data || []; categories = c.data || []; fill(); renderRecent(); }
+const extra = document.createElement("script");
+extra.src = "admin-extra.js?v=1";
+document.head.append(extra);
 nav(); bind(); show(false); hasSession();
