@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin | Juntos Hacia Dios</title>
+  <meta name="description" content="Panel de administración de Juntos Hacia Dios.">
+  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="admin-pro.css?v=1">
+  <link rel="stylesheet" href="admin-search-fix.css?v=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=1"></script>
+  <script src="admin-pro.js?v=1" defer></script>
+  <script src="admin-search-fix.js?v=4" defer></script>
+  <script src="admin-category-browser.js?v=1" defer></script>
+  <script src="admin-category-browser-v2.js?v=1" defer></script>
+  <script src="admin-category-save-fix.js?v=2" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html">Canciones</a>
+        <a href="artistas.html">Artistas</a>
+        <a href="categorias.html">Categorías</a>
+        <a href="albumes.html">Álbumes</a>
+        <a href="donaciones.html">Donaciones</a>
+        <a class="active" href="admin.html">Admin</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
+      </div>
+    </nav>
+  </header>
+  <main class="admin-page">
+    <section class="admin-hero">
+      <p class="hero-kicker">Panel privado</p>
+      <h1>Administración</h1>
+      <p>Gestiona artistas, categorías, álbumes, canciones, versiones con capo, enlaces y datos de donación desde un mismo lugar.</p>
+    </section>
+    <section class="admin-login-card" id="adminLoginSection">
+      <h2>Entrar al panel</h2>
+      <p class="admin-note">Escribe tu correo autorizado. Recibirás un enlace seguro para iniciar sesión.</p>
+      <form class="admin-form" id="adminLoginForm">
+        <label>Correo<input type="email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com"></label>
+        <button class="song-btn" type="submit">Enviar enlace de acceso</button>
+      </form>
+      <p class="muted-text" id="adminLoginMessage"></p>
+    </section>
+    <section id="adminWorkspace" class="admin-hidden" aria-live="polite"></section>
+  </main>
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear()</script>
+</body>
+</html>
