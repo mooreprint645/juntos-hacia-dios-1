@@ -38,5 +38,6 @@ async function reload() {
   select("#extraLinkSong", choices(aeSongs));
   select("#extraCapoSong", choices(aeSongs));
 }
-function startExtra() { mount(); reload(); AdminExtra.auth.onAuthStateChange(() => reload()); }
+function loadManage() { const script = document.createElement("script"); script.src = "admin-manage.js?v=1"; document.head.append(script); }
+function startExtra() { mount(); reload(); loadManage(); AdminExtra.auth.onAuthStateChange(() => reload()); }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startExtra); else startExtra();
