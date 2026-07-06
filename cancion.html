@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canción | Juntos Hacia Dios</title>
+  <meta name="description" content="Detalle de canción con letra, tono, acordes y recursos." />
+  <link rel="stylesheet" href="style.css?v=2" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=1"></script>
+  <script src="cancion.js?v=1" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html" class="active">Canciones</a>
+        <a href="artistas.html">Artistas</a>
+        <a href="categorias.html">Categorías</a>
+        <a href="donaciones.html">Donaciones</a>
+        <a href="admin.html">Admin</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="hero-kicker" id="songType">Canción</p>
+        <h1 id="songTitle">Cargando canción...</h1>
+        <p id="songSubtitle">Un momento por favor.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <article class="intro-card">
+        <div id="songMeta" class="song-filters"></div>
+        <h2>Letra</h2>
+        <div id="songLyrics" class="lyrics muted-text">Cargando letra...</div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-heading split-heading">
+        <div><p class="hero-kicker">Recursos</p><h2>Enlaces</h2></div>
+        <a class="text-link" href="canciones.html">Volver a canciones</a>
+      </div>
+      <div id="songLinks" class="quick-cards">
+        <article class="quick-card"><h3>Sin recursos</h3><p>Aún no hay enlaces disponibles.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a></p>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
