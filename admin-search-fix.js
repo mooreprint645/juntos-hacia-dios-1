@@ -26,7 +26,7 @@
   `;
   if (!document.getElementById(style.id)) document.head.append(style);
 
-  const searchIds = new Set(["artistFilter", "categoryFilter", "albumFilter", "songFilter"]);
+  const searchIds = new Set(["artistFilter", "categoryFilter", "albumFilter", "songFilter", "collaboratorSearch"]);
   const formInfo = {
     artists: { form: "#artistAdminForm", copy: "Agregar artista o ministerio" },
     categories: { form: "#categoryAdminForm", copy: "Agregar categoría o carpeta" },
