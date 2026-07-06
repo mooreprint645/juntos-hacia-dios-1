@@ -29,7 +29,7 @@ async function loadRelations(songs) {
   const [artistRes, categoryRes, albumRes] = await Promise.all([
     client.from("song_artists").select("song_id,artists(id,name,artist_type)").in("song_id", ids),
     client.from("song_categories").select("song_id,categories(id,name,song_type,slug)").in("song_id", ids),
-    client.from("album_songs").select("song_id,albums(id,title,slug,year)").in("song_id", ids)
+    client.from("album_songs").select("song_id,albums(id,title,slug)").in("song_id", ids)
   ]);
   const artistsBySong = new Map(), categoriesBySong = new Map(), albumsBySong = new Map();
   (artistRes.data || []).forEach((row) => { if (!artistsBySong.has(row.song_id)) artistsBySong.set(row.song_id, []); if (row.artists) artistsBySong.get(row.song_id).push(row.artists); });
