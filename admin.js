@@ -1,123 +1,63 @@
 const client = window.supabaseClient;
-const message = document.querySelector("#adminMessage");
-const recent = document.querySelector("#adminRecent");
+const $ = (s) => document.querySelector(s);
+let songs = [], artists = [], categories = [];
+const esc = (v) => String(v || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+const note = (id, text) => { const el = $(id); if (el) el.textContent = text; };
 
-const escapeHTML = (value) => String(value || "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#039;");
-
-function initNavigation() {
-  const menuButton = document.querySelector("#menuToggle");
-  const menu = document.querySelector("#navMenu");
-  const themeButton = document.querySelector("#themeToggle");
-  menuButton?.addEventListener("click", () => menu?.classList.toggle("open"));
-  if (localStorage.getItem("jhd-theme") === "light") {
-    document.body.classList.add("light-mode");
-    if (themeButton) themeButton.textContent = "☀️";
-  }
-  themeButton?.addEventListener("click", () => {
-    document.body.classList.toggle("light-mode");
-    const light = document.body.classList.contains("light-mode");
-    localStorage.setItem("jhd-theme", light ? "light" : "dark");
-    themeButton.textContent = light ? "☀️" : "🌙";
-  });
+function nav() {
+  $("#menuToggle")?.addEventListener("click", () => $("#navMenu")?.classList.toggle("open"));
+  const theme = $("#themeToggle");
+  if (localStorage.getItem("jhd-theme") === "light") { document.body.classList.add("light-mode"); if (theme) theme.textContent = "☀️"; }
+  theme?.addEventListener("click", () => { document.body.classList.toggle("light-mode"); const light = document.body.classList.contains("light-mode"); localStorage.setItem("jhd-theme", light ? "light" : "dark"); theme.textContent = light ? "☀️" : "🌙"; });
 }
 
-function setMessage(text) {
-  if (message) message.textContent = text;
+function show(on) {
+  ["#adminPanel", "#relationsPanel", "#recentPanel"].forEach((id) => $(id)?.classList.toggle("hidden", !on));
+  $("#loginSection")?.classList.toggle("hidden", on);
 }
 
-function formData(form) {
-  return Object.fromEntries(new FormData(form).entries());
+const formData = (form) => Object.fromEntries(new FormData(form).entries());
+const clean = (obj) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [k, String(v || "").trim()]).filter(([, v]) => v));
+const slug = (v) => String(v || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+function payload(table, raw) { const p = clean(raw); if (table === "songs" && p.title) p.slug ||= slug(p.title); if ((table === "artists" || table === "categories") && p.name) p.slug ||= slug(p.name); return p; }
+
+async function hasSession() {
+  const { data } = await client.auth.getSession();
+  const ok = Boolean(data?.session);
+  show(ok);
+  if (ok) await refresh();
+  return ok;
 }
 
-function cleanPayload(payload) {
-  return Object.fromEntries(Object.entries(payload).map(([key, value]) => [key, String(value || "").trim()]).filter(([, value]) => value !== ""));
-}
-
-function slugify(value) {
-  return String(value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
-
-function enrichPayload(table, rawPayload) {
-  const payload = cleanPayload(rawPayload);
-  if ((table === "artists" || table === "categories") && payload.name && !payload.slug) {
-    payload.slug = slugify(payload.name);
-  }
-  if (table === "songs" && payload.title && !payload.slug) {
-    payload.slug = slugify(payload.title);
-  }
-  return payload;
-}
-
-async function insertRecord(table, payload, successText) {
-  if (!client) {
-    setMessage("No se pudo iniciar Supabase.");
-    return false;
-  }
-  const finalPayload = enrichPayload(table, payload);
-  const { error } = await client.from(table).insert([finalPayload]);
-  if (error) {
-    console.error(error);
-    setMessage(`Error al guardar en ${table}: ${error.message}`);
-    return false;
-  }
-  setMessage(successText);
-  await loadRecent();
+async function add(table, raw, okText) {
+  if (!await hasSession()) { note("#adminMessage", "Primero entra al panel."); return false; }
+  const { error } = await client.from(table).insert([payload(table, raw)]);
+  if (error) { note("#adminMessage", `Error: ${error.message}`); return false; }
+  note("#adminMessage", okText);
+  await refresh();
   return true;
 }
 
-function initForms() {
-  document.querySelector("#songForm")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const ok = await insertRecord("songs", formData(form), "Canción guardada correctamente.");
-    if (ok) form.reset();
+function bind() {
+  $("#loginForm")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = formData(e.currentTarget);
+    note("#loginMessage", "Revisando acceso...");
+    const { error } = await client.auth.signInWithOtp({ email: f.email, options: { emailRedirectTo: window.location.href } });
+    note("#loginMessage", error ? error.message : "Revisa tu correo para entrar al panel.");
   });
-  document.querySelector("#artistForm")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const ok = await insertRecord("artists", formData(form), "Artista guardado correctamente.");
-    if (ok) form.reset();
-  });
-  document.querySelector("#categoryForm")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const ok = await insertRecord("categories", formData(form), "Categoría guardada correctamente.");
-    if (ok) form.reset();
-  });
-  document.querySelector("#refreshAdmin")?.addEventListener("click", loadRecent);
+  $("#logoutButton")?.addEventListener("click", async () => { await client.auth.signOut(); show(false); note("#loginMessage", "Sesión cerrada."); });
+  $("#songForm")?.addEventListener("submit", async (e) => { e.preventDefault(); if (await add("songs", formData(e.currentTarget), "Canción guardada.")) e.currentTarget.reset(); });
+  $("#artistForm")?.addEventListener("submit", async (e) => { e.preventDefault(); if (await add("artists", formData(e.currentTarget), "Artista guardado.")) e.currentTarget.reset(); });
+  $("#categoryForm")?.addEventListener("submit", async (e) => { e.preventDefault(); if (await add("categories", formData(e.currentTarget), "Categoría guardada.")) e.currentTarget.reset(); });
+  $("#songArtistForm")?.addEventListener("submit", async (e) => { e.preventDefault(); if (await add("song_artists", formData(e.currentTarget), "Artista unido.")) e.currentTarget.reset(); });
+  $("#songCategoryForm")?.addEventListener("submit", async (e) => { e.preventDefault(); if (await add("song_categories", formData(e.currentTarget), "Categoría unida.")) e.currentTarget.reset(); });
+  $("#refreshAdmin")?.addEventListener("click", refresh);
 }
 
-async function loadRecent() {
-  if (!recent) return;
-  if (!client) {
-    recent.innerHTML = "<article class='song-card'><h3>Sin conexión</h3><p>No se pudo iniciar Supabase.</p></article>";
-    return;
-  }
-  const { data, error } = await client.from("songs").select("*").order("created_at", { ascending: false }).limit(6);
-  if (error) {
-    console.error(error);
-    recent.innerHTML = "<article class='song-card'><h3>Error</h3><p>No se pudieron cargar registros recientes.</p></article>";
-    return;
-  }
-  const songs = data || [];
-  recent.innerHTML = songs.length ? songs.map((song) => {
-    const title = escapeHTML(song.title || song.name || "Canción sin título");
-    const type = escapeHTML(song.song_type || song.type || "Canción");
-    const tone = escapeHTML(song.tone || "");
-    return `<article class="song-card"><h3>${title}</h3><p>${type}${tone ? ` · Tono ${tone}` : ""}</p></article>`;
-  }).join("") : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay registros recientes.</p></article>";
-}
+function options(items) { return '<option value="">Seleccionar...</option>' + items.map((x) => `<option value="${esc(x.id)}">${esc(x.title || x.name || x.id)}</option>`).join(""); }
+function fill() { const so = options(songs), ao = options(artists), co = options(categories); if ($("#songArtistSong")) $("#songArtistSong").innerHTML = so; if ($("#songCategorySong")) $("#songCategorySong").innerHTML = so; if ($("#songArtistArtist")) $("#songArtistArtist").innerHTML = ao; if ($("#songCategoryCategory")) $("#songCategoryCategory").innerHTML = co; }
+function renderRecent() { const box = $("#adminRecent"); if (!box) return; box.innerHTML = songs.length ? songs.slice(0, 6).map((s) => `<article class="song-card"><h3>${esc(s.title || "Sin título")}</h3><p>${esc(s.song_type || "Canción")}${s.tone ? ` · Tono ${esc(s.tone)}` : ""}</p></article>`).join("") : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay registros.</p></article>"; }
+async function refresh() { const [a, b, c] = await Promise.all([client.from("songs").select("*").order("created_at", { ascending: false }).limit(50), client.from("artists").select("*").order("name", { ascending: true }).limit(200), client.from("categories").select("*").order("name", { ascending: true }).limit(200)]); songs = a.data || []; artists = b.data || []; categories = c.data || []; fill(); renderRecent(); }
 
-initNavigation();
-initForms();
-loadRecent();
+nav(); bind(); show(false); hasSession();
