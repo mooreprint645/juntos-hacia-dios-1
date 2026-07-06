@@ -2,7 +2,7 @@ const Manage = window.supabaseClient;
 const mq = (s) => document.querySelector(s);
 const h = (v) => String(v || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 let type = "songs", rows = [];
-const fields = { songs: ["title", "tone", "song_type", "lyrics"], artists: ["name", "artist_type", "description"], categories: ["name", "song_type", "description", "parent_id", "sort_order"], albums: ["title", "artist_id", "year", "description", "sort_order"] };
+const fields = { songs: ["title", "tone", "song_type", "lyrics"], artists: ["name", "artist_type", "description"], categories: ["name", "song_type", "description", "parent_id", "sort_order"], albums: ["title", "artist_id", "description", "sort_order"] };
 function msg(text) { const el = mq("#adminMessage"); if (el) el.textContent = text; }
 async function signed() { const { data } = await Manage.auth.getSession(); return Boolean(data?.session); }
 function mount() { const host = mq("#recentPanel"); if (!host || mq("#managePanel")) return; const block = document.createElement("section"); block.id = "managePanel"; block.className = "section"; block.innerHTML = `<div class="section-heading split-heading"><div><p class="hero-kicker">Administrar</p><h2>Editar o eliminar</h2></div><select id="manageType"><option value="songs">Canciones</option><option value="artists">Artistas</option><option value="categories">Categorías</option><option value="albums">Álbumes</option></select></div><div id="manageList" class="songs-grid"></div><div id="manageEditor"></div>`; host.append(block); mq("#manageType").addEventListener("change", (event) => { type = event.target.value; load(); }); }
