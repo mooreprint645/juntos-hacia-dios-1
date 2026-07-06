@@ -21,11 +21,34 @@ function card(person) {
   const key = person.slug || slugify(person.name);
   return `<a class="artist-card" href="artistas.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(person.artist_type || person.type || "Ministerio")}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
 }
+function artistGroup(person) {
+  const type = norm(person.artist_type || person.type);
+  if (type.includes("catolico")) return "catolico";
+  if (type.includes("cristiano")) return "cristiano";
+  return "otros";
+}
+function groupSection(title, subtitle, list) {
+  if (!list.length) return "";
+  return `<section class="artist-group"><div class="section-heading"><p class="hero-kicker">${subtitle}</p><h2>${title}</h2></div><div class="artists-grid">${list.map(card).join("")}</div></section>`;
+}
 function drawList() {
   if (!grid) return;
   const query = norm(input?.value);
   const list = people.filter((person) => !query || norm([person.name, person.description, person.type, person.artist_type].join(" ")).includes(query));
-  grid.innerHTML = list.length ? list.map(card).join("") : "<article class='artist-card'><h3>Sin resultados</h3><p>Prueba con otro nombre.</p></article>";
+  if (!list.length) {
+    grid.className = "artists-grid";
+    grid.innerHTML = "<article class='artist-card'><h3>Sin resultados</h3><p>Prueba con otro nombre.</p></article>";
+    return;
+  }
+  const catholic = list.filter((person) => artistGroup(person) === "catolico");
+  const christian = list.filter((person) => artistGroup(person) === "cristiano");
+  const others = list.filter((person) => artistGroup(person) === "otros");
+  grid.className = "artist-groups";
+  grid.innerHTML = [
+    groupSection("Artistas católicos", "Católico", catholic),
+    groupSection("Artistas cristianos", "Cristiano", christian),
+    groupSection("Otros artistas", "General", others)
+  ].join("");
 }
 async function drawProfile(person) {
   if (!grid) return;
@@ -46,6 +69,7 @@ async function drawProfile(person) {
   const initials = String(person.name || "JHD").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
   const rows = songs.length ? songs.map((song) => `<a class="song-card song-link-card" href="cancion.html?id=${encodeURIComponent(song.id)}"><p class="artists-line">${esc(song.song_type || "Canción")}</p><h3>${esc(song.title || "Canción")}</h3><p>${esc(song.tone ? `Tono ${song.tone}` : "Ver letra y acordes")}</p></a>`).join("") : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay canciones relacionadas.</p></article>";
   const albumLinks = albums.length ? `<div class="song-filters">${albums.map((album) => `<a class="filter-btn" href="canciones.html?album=${encodeURIComponent(album.slug || album.title || "")}">${esc(album.title || "Álbum")}${album.year ? ` · ${esc(album.year)}` : ""}</a>`).join("")}</div>` : "";
+  grid.className = "artists-grid";
   grid.innerHTML = `<article class="intro-card"><div class="artist-mini-avatar">${esc(initials)}</div><h2>${esc(person.name || "Ministerio")}</h2><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p><p class="muted-text">${songs.length} ${songs.length === 1 ? "canción" : "canciones"} relacionadas</p>${albumLinks}<a class="song-btn secondary" href="artistas.html">← Volver a artistas</a></article><div class="songs-grid">${rows}</div>`;
 }
 async function start() {
