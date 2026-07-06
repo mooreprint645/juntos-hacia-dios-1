@@ -4,6 +4,7 @@ const input = document.querySelector("#artistSearch");
 const params = new URLSearchParams(location.search);
 const selectedKey = params.get("slug") || params.get("id") || "";
 let people = [];
+let activeType = "";
 
 const norm = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const slugify = (value) => norm(value).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
@@ -17,38 +18,52 @@ function nav() {
   if (localStorage.getItem("jhd-theme") === "light") { document.body.classList.add("light-mode"); if (theme) theme.textContent = "☀️"; }
   theme?.addEventListener("click", () => { document.body.classList.toggle("light-mode"); const on = document.body.classList.contains("light-mode"); localStorage.setItem("jhd-theme", on ? "light" : "dark"); theme.textContent = on ? "☀️" : "🌙"; });
 }
-function card(person) {
-  const key = person.slug || slugify(person.name);
-  return `<a class="artist-card" href="artistas.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(person.artist_type || person.type || "Ministerio")}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
-}
 function artistGroup(person) {
   const type = norm(person.artist_type || person.type);
   if (type.includes("catolico")) return "catolico";
   if (type.includes("cristiano")) return "cristiano";
   return "otros";
 }
-function groupSection(title, subtitle, list) {
-  if (!list.length) return "";
-  return `<section class="artist-group"><div class="section-heading"><p class="hero-kicker">${subtitle}</p><h2>${title}</h2></div><div class="artists-grid">${list.map(card).join("")}</div></section>`;
+function typeLabel(person) {
+  const group = artistGroup(person);
+  if (group === "catolico") return "Católico";
+  if (group === "cristiano") return "Cristiano";
+  return person.artist_type || person.type || "General";
+}
+function card(person) {
+  const key = person.slug || slugify(person.name);
+  return `<a class="artist-card" href="artistas.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(typeLabel(person))}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
+}
+function mountFilters() {
+  if (document.querySelector("#artistTypeFilters")) return;
+  const searchBox = input?.closest(".search-container");
+  if (!searchBox) return;
+  const filters = document.createElement("div");
+  filters.id = "artistTypeFilters";
+  filters.className = "song-filters";
+  filters.innerHTML = `<button class="filter-btn active" type="button" data-artist-type="">Todas</button><button class="filter-btn" type="button" data-artist-type="catolico">Católicos</button><button class="filter-btn" type="button" data-artist-type="cristiano">Cristianos</button>`;
+  searchBox.after(filters);
+  filters.querySelectorAll("[data-artist-type]").forEach((button) => button.addEventListener("click", () => {
+    activeType = button.dataset.artistType || "";
+    filters.querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button));
+    drawList();
+  }));
 }
 function drawList() {
   if (!grid) return;
   const query = norm(input?.value);
-  const list = people.filter((person) => !query || norm([person.name, person.description, person.type, person.artist_type].join(" ")).includes(query));
+  const list = people.filter((person) => {
+    const matchesSearch = !query || norm([person.name, person.description, person.type, person.artist_type].join(" ")).includes(query);
+    const matchesType = !activeType || artistGroup(person) === activeType;
+    return matchesSearch && matchesType;
+  });
+  grid.className = "artists-grid";
   if (!list.length) {
-    grid.className = "artists-grid";
-    grid.innerHTML = "<article class='artist-card'><h3>Sin resultados</h3><p>Prueba con otro nombre.</p></article>";
+    const label = activeType === "catolico" ? "católicos" : activeType === "cristiano" ? "cristianos" : "";
+    grid.innerHTML = `<article class='artist-card'><h3>Sin resultados</h3><p>${label ? `No hay artistas ${label} que coincidan con la búsqueda.` : "Prueba con otro nombre."}</p></article>`;
     return;
   }
-  const catholic = list.filter((person) => artistGroup(person) === "catolico");
-  const christian = list.filter((person) => artistGroup(person) === "cristiano");
-  const others = list.filter((person) => artistGroup(person) === "otros");
-  grid.className = "artist-groups";
-  grid.innerHTML = [
-    groupSection("Artistas católicos", "Católico", catholic),
-    groupSection("Artistas cristianos", "Cristiano", christian),
-    groupSection("Otros artistas", "General", others)
-  ].join("");
+  grid.innerHTML = list.map(card).join("");
 }
 async function drawProfile(person) {
   if (!grid) return;
@@ -58,6 +73,7 @@ async function drawProfile(person) {
   if (heroTitle) heroTitle.textContent = person.name || "Artista";
   if (heroText) heroText.textContent = person.description || "Ministerio o artista del cancionero.";
   input?.closest(".search-container")?.classList.add("hidden");
+  document.querySelector("#artistTypeFilters")?.classList.add("hidden");
   const [songsRes, relationRes, albumsRes] = await Promise.all([
     db.from("songs").select("*").order("title", { ascending: true }),
     db.from("song_artists").select("song_id,artist_id"),
@@ -74,6 +90,7 @@ async function drawProfile(person) {
 }
 async function start() {
   if (!db || !grid) return;
+  mountFilters();
   const result = await db.from("artists").select("*").order("name", { ascending: true });
   if (result.error) { grid.innerHTML = "<article class='artist-card'><h3>Error al cargar</h3><p>Revisa la conexión con Supabase.</p></article>"; return; }
   people = result.data || [];
