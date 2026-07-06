@@ -46,14 +46,15 @@
     document.head.append(script);
   };
 
-  const loadSongPickers = () => {
+  const loadAdminEnhancements = () => {
     loadScript("admin-song-category-search.js?v=2", "data-song-category-search", () => {
       loadScript("admin-song-category-picker.js?v=1", "data-song-category-picker", () => {
         loadScript("admin-song-category-picker-layout.js?v=1", "data-song-category-picker-layout");
       });
     });
+    loadScript("admin-history.js?v=1", "data-admin-history");
   };
 
-  if (document.readyState === "complete") loadSongPickers();
-  else window.addEventListener("load", loadSongPickers, { once: true });
+  if (document.readyState === "complete") loadAdminEnhancements();
+  else window.addEventListener("load", loadAdminEnhancements, { once: true });
 })();
