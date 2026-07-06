@@ -11,9 +11,20 @@ let capoLabel = "Sin capo";
 const escapeHTML = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 const N = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const flat = { Db: "C#", Eb: "D#", Gb: "F#", Ab: "G#", Bb: "A#" };
+const rootNote = (value) => (String(value || "").match(/[A-G](?:#|b)?/) || [""])[0];
 const toneIndex = (value) => N.indexOf(flat[String(value || "")] || String(value || ""));
-const chord = (value, move) => String(value || "").replace(/^([A-G](?:#|b)?)(.*)$/, (_, root, rest) => { const index = toneIndex(root); return index < 0 ? value : N[(index + move + 120) % 12] + rest; });
+const moveNote = (value, move) => { const index = toneIndex(value); return index < 0 ? value : N[(index + Number(move || 0) + 120) % 12]; };
+const chord = (value, move) => String(value || "").replace(/^([A-G](?:#|b)?)(.*)$/, (_, root, rest) => {
+  const bass = String(rest || "").replace(/\/([A-G](?:#|b)?)/g, (match, note) => `/${moveNote(note, move)}`);
+  return moveNote(root, move) + bass;
+});
 const chordGroup = (value, move) => String(value || "").replace(/[A-G](?:#|b)?[a-zA-Z0-9#b+\-susmajdimaug/()]*/g, (item) => chord(item, move));
+const capoOffset = (position, capoKey) => {
+  const original = toneIndex(rootNote(currentSong?.tone || currentSong?.key));
+  const shape = toneIndex(rootNote(capoKey));
+  if (original >= 0 && shape >= 0) return shape - original;
+  return -Number(position || 0);
+};
 
 function initNavigation() {
   const menuButton = $("#menuToggle"), menu = $("#navMenu"), themeButton = $("#themeToggle");
@@ -66,11 +77,17 @@ function renderControls(relations) {
   if (!meta || $("#transposeBox")) return;
   const versions = relations.capos || [];
   const mainCapo = Number(currentSong.capo_position || 0);
-  const mainButton = mainCapo > 0 ? `<button class="song-btn small-btn" data-capo="${-mainCapo}" data-label="Capo ${mainCapo}${currentSong.capo_key ? ` · ${escapeHTML(currentSong.capo_key)}` : ""}">Capo ${mainCapo}</button>` : "";
-  const versionButtons = versions.map((item) => `<button class="song-btn small-btn" data-capo="${-Number(item.capo_position || 0)}" data-label="${escapeHTML(item.label || `Capo ${item.capo_position || 0}${item.capo_key ? ` · ${item.capo_key}` : ""}`)}">${escapeHTML(item.label || `Capo ${item.capo_position || 0}`)}</button>`).join("");
-  meta.insertAdjacentHTML("afterend", `<div class="transpose-box" id="transposeBox"><button class="song-btn small-btn" data-tone="-1">Bajar tono</button><span id="transposeStatus">Tono original · Sin capo</span><button class="song-btn small-btn" data-tone="1">Subir tono</button><button class="song-btn small-btn secondary" data-tone="0">Original</button></div><div class="song-filters" id="capoControls"><button class="filter-btn active" data-capo="0" data-label="Sin capo">Sin capo</button>${mainButton}${versionButtons}</div>`);
+  const mainKey = currentSong.capo_key || "";
+  const mainButton = mainCapo > 0 ? `<button class="song-btn small-btn" data-position="${mainCapo}" data-key="${escapeHTML(mainKey)}" data-label="Capo ${mainCapo}${mainKey ? ` · Figuras en ${escapeHTML(mainKey)}` : ""}">Capo ${mainCapo}</button>` : "";
+  const versionButtons = versions.map((item) => {
+    const position = Number(item.capo_position || 0);
+    const key = item.capo_key || "";
+    const label = item.label || `Capo ${position}${key ? ` · Figuras en ${key}` : ""}`;
+    return `<button class="song-btn small-btn" data-position="${position}" data-key="${escapeHTML(key)}" data-label="${escapeHTML(label)}">${escapeHTML(label)}</button>`;
+  }).join("");
+  meta.insertAdjacentHTML("afterend", `<div class="transpose-box" id="transposeBox"><button class="song-btn small-btn" data-tone="-1">Bajar tono</button><span id="transposeStatus">Tono original · Sin capo</span><button class="song-btn small-btn" data-tone="1">Subir tono</button><button class="song-btn small-btn secondary" data-tone="0">Original</button></div><div class="song-filters" id="capoControls"><button class="filter-btn active" data-position="0" data-key="" data-label="Sin capo">Sin capo</button>${mainButton}${versionButtons}</div>`);
   $("#transposeBox").querySelectorAll("[data-tone]").forEach((button) => button.addEventListener("click", () => { const value = Number(button.dataset.tone); transpose = value === 0 ? 0 : transpose + value; renderChordLyrics(); }));
-  $("#capoControls").querySelectorAll("[data-capo]").forEach((button) => button.addEventListener("click", () => { capoShift = Number(button.dataset.capo); capoLabel = button.dataset.label || "Sin capo"; $("#capoControls").querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button)); renderChordLyrics(); }));
+  $("#capoControls").querySelectorAll("[data-position]").forEach((button) => button.addEventListener("click", () => { capoShift = capoOffset(button.dataset.position, button.dataset.key); capoLabel = button.dataset.label || "Sin capo"; $("#capoControls").querySelectorAll("button").forEach((item) => item.classList.toggle("active", item === button)); renderChordLyrics(); }));
 }
 
 function renderMeta(song, relations) {
