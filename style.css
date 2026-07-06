@@ -179,6 +179,47 @@ footer p + p { margin-top: 6px; }
 footer a { color: var(--gold); text-decoration: none; }
 .shimmer-card { min-height: 150px; animation: pulse 1.5s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .58; } }
+.search-container { margin-bottom: 22px; }
+.search-container input, .admin-form input, .admin-form select, .admin-form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  padding: 14px 16px;
+  outline: none;
+}
+body.light-mode .search-container input, body.light-mode .admin-form input, body.light-mode .admin-form select, body.light-mode .admin-form textarea {
+  background: #fff;
+}
+.search-container input:focus, .admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus { border-color: var(--gold); }
+.song-filters { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 24px; }
+.filter-btn {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  padding: 10px 14px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.filter-btn.active, .filter-btn:hover { background: var(--gold); color: #151515; }
+.small-btn { min-height: 38px; padding: 8px 14px; margin-top: 14px; font-size: .9rem; }
+.lyrics {
+  margin-top: 20px;
+  white-space: pre-wrap;
+  text-align: left;
+  line-height: 1.85;
+  color: var(--text);
+  background: rgba(255,255,255,.045);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+}
+.muted-text { color: var(--muted); margin-top: 16px; }
+.admin-form { display: grid; gap: 12px; margin-top: 16px; }
+.admin-form textarea { resize: vertical; min-height: 120px; }
+.admin-form .song-btn { width: 100%; margin-top: 4px; }
 @media (max-width: 850px) {
   .navbar { min-height: 68px; }
   .menu-toggle { display: block; }
