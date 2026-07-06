@@ -17,19 +17,16 @@ function nav() {
   if (localStorage.getItem("jhd-theme") === "light") { document.body.classList.add("light-mode"); if (theme) theme.textContent = "☀️"; }
   theme?.addEventListener("click", () => { document.body.classList.toggle("light-mode"); const on = document.body.classList.contains("light-mode"); localStorage.setItem("jhd-theme", on ? "light" : "dark"); theme.textContent = on ? "☀️" : "🌙"; });
 }
-
 function card(person) {
   const key = person.slug || slugify(person.name);
   return `<a class="artist-card" href="artistas.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(person.artist_type || person.type || "Ministerio")}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
 }
-
 function drawList() {
   if (!grid) return;
   const query = norm(input?.value);
   const list = people.filter((person) => !query || norm([person.name, person.description, person.type, person.artist_type].join(" ")).includes(query));
   grid.innerHTML = list.length ? list.map(card).join("") : "<article class='artist-card'><h3>Sin resultados</h3><p>Prueba con otro nombre.</p></article>";
 }
-
 async function drawProfile(person) {
   if (!grid) return;
   document.title = `${person.name || "Artista"} | Juntos Hacia Dios`;
@@ -38,17 +35,19 @@ async function drawProfile(person) {
   if (heroTitle) heroTitle.textContent = person.name || "Artista";
   if (heroText) heroText.textContent = person.description || "Ministerio o artista del cancionero.";
   input?.closest(".search-container")?.classList.add("hidden");
-  const [songsRes, relationRes] = await Promise.all([
+  const [songsRes, relationRes, albumsRes] = await Promise.all([
     db.from("songs").select("*").order("title", { ascending: true }),
-    db.from("song_artists").select("song_id,artist_id")
+    db.from("song_artists").select("song_id,artist_id"),
+    db.from("albums").select("*").eq("artist_id", person.id).order("title", { ascending: true })
   ]);
   const ids = new Set((relationRes.data || []).filter((row) => String(row.artist_id) === String(person.id)).map((row) => String(row.song_id)));
   const songs = (songsRes.data || []).filter((song) => ids.has(String(song.id)));
+  const albums = albumsRes.data || [];
   const initials = String(person.name || "JHD").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
   const rows = songs.length ? songs.map((song) => `<a class="song-card song-link-card" href="cancion.html?id=${encodeURIComponent(song.id)}"><p class="artists-line">${esc(song.song_type || "Canción")}</p><h3>${esc(song.title || "Canción")}</h3><p>${esc(song.tone ? `Tono ${song.tone}` : "Ver letra y acordes")}</p></a>`).join("") : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay canciones relacionadas.</p></article>";
-  grid.innerHTML = `<article class="intro-card"><div class="artist-mini-avatar">${esc(initials)}</div><h2>${esc(person.name || "Ministerio")}</h2><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p><p class="muted-text">${songs.length} ${songs.length === 1 ? "canción" : "canciones"} relacionadas</p><a class="song-btn secondary" href="artistas.html">← Volver a artistas</a></article><div class="songs-grid">${rows}</div>`;
+  const albumLinks = albums.length ? `<div class="song-filters">${albums.map((album) => `<a class="filter-btn" href="canciones.html?album=${encodeURIComponent(album.slug || album.title || "")}">${esc(album.title || "Álbum")}${album.year ? ` · ${esc(album.year)}` : ""}</a>`).join("")}</div>` : "";
+  grid.innerHTML = `<article class="intro-card"><div class="artist-mini-avatar">${esc(initials)}</div><h2>${esc(person.name || "Ministerio")}</h2><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p><p class="muted-text">${songs.length} ${songs.length === 1 ? "canción" : "canciones"} relacionadas</p>${albumLinks}<a class="song-btn secondary" href="artistas.html">← Volver a artistas</a></article><div class="songs-grid">${rows}</div>`;
 }
-
 async function start() {
   if (!db || !grid) return;
   const result = await db.from("artists").select("*").order("name", { ascending: true });
@@ -59,7 +58,6 @@ async function start() {
   if (selectedKey && !chosen) { grid.innerHTML = "<article class='artist-card'><h3>Artista no encontrado</h3><p>Vuelve al listado e intenta nuevamente.</p></article>"; return; }
   drawList();
 }
-
 input?.addEventListener("input", drawList);
 nav();
 start();
