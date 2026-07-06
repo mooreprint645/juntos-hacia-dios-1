@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Juntos Hacia Dios</title>
+  <meta name="description" content="Panel de administración para Juntos Hacia Dios." />
+  <link rel="stylesheet" href="style.css?v=2" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=1"></script>
+  <script src="admin.js?v=1" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html">Canciones</a>
+        <a href="artistas.html">Artistas</a>
+        <a href="categorias.html">Categorías</a>
+        <a href="donaciones.html">Donaciones</a>
+        <a href="admin.html" class="active">Admin</a>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <p class="hero-kicker">Panel privado</p>
+        <h1>Administración</h1>
+        <p>Gestiona canciones, artistas y categorías desde una estructura limpia.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="quick-cards">
+        <article class="quick-card">
+          <h3>Nueva canción</h3>
+          <form class="admin-form" id="songForm">
+            <input name="title" placeholder="Título" required />
+            <input name="artist" placeholder="Artista" />
+            <input name="category" placeholder="Categoría" />
+            <input name="tone" placeholder="Tono" />
+            <select name="type">
+              <option value="">Tipo</option>
+              <option value="catolico">Católico</option>
+              <option value="cristiano">Cristiano</option>
+              <option value="mixto">Mixto</option>
+            </select>
+            <textarea name="lyrics" rows="8" placeholder="Letra"></textarea>
+            <button class="song-btn" type="submit">Guardar canción</button>
+          </form>
+        </article>
+
+        <article class="quick-card">
+          <h3>Nuevo artista</h3>
+          <form class="admin-form" id="artistForm">
+            <input name="name" placeholder="Nombre" required />
+            <input name="type" placeholder="Tipo o ministerio" />
+            <textarea name="description" rows="5" placeholder="Descripción"></textarea>
+            <button class="song-btn" type="submit">Guardar artista</button>
+          </form>
+        </article>
+
+        <article class="quick-card">
+          <h3>Nueva categoría</h3>
+          <form class="admin-form" id="categoryForm">
+            <input name="name" placeholder="Nombre" required />
+            <textarea name="description" rows="5" placeholder="Descripción"></textarea>
+            <button class="song-btn" type="submit">Guardar categoría</button>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading split-heading">
+        <div><p class="hero-kicker">Estado</p><h2>Registros recientes</h2></div>
+        <button class="song-btn secondary" id="refreshAdmin" type="button">Actualizar</button>
+      </div>
+      <div class="songs-grid" id="adminRecent">
+        <article class="song-card"><h3>Cargando...</h3><p>Un momento por favor.</p></article>
+      </div>
+      <p class="muted-text" id="adminMessage"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a></p>
+  </footer>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
