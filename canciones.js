@@ -2,9 +2,8 @@ const client = window.supabaseClient;
 const songsGrid = document.querySelector("#songsGrid");
 const searchInput = document.querySelector("#songSearch");
 const filterButtons = [...document.querySelectorAll(".filter-btn")];
-const params = new URLSearchParams(window.location.search);
-const categoryParam = params.get("categoria") || "";
-const albumParam = params.get("album") || "";
+let categoryParam = "";
+let albumParam = "";
 let allSongs = [];
 let activeType = "";
 
@@ -22,6 +21,27 @@ function getSongType(song) { return normalize(song.song_type || song.type || son
 function names(items) { return (items || []).map((item) => item?.name || item?.title || "").filter(Boolean).join(" · "); }
 function songCategory(song) { return normalize([song.category, song.category_name, names(song._categories)].join(" ")); }
 function songAlbum(song) { return normalize([song.album, song.album_name, names(song._albums)].join(" ")); }
+
+function readRoute() {
+  const params = new URLSearchParams(location.search);
+  categoryParam = params.get("categoria") || "";
+  albumParam = params.get("album") || "";
+  activeType = normalize(params.get("tipo") || "");
+  if (searchInput) searchInput.value = params.get("buscar") || "";
+  filterButtons.forEach((button) => button.classList.toggle("active", normalize(button.dataset.type) === activeType));
+}
+
+function saveRoute(mode = "replace") {
+  const url = new URL(location.href);
+  url.searchParams.delete("tipo");
+  url.searchParams.delete("buscar");
+  if (activeType) url.searchParams.set("tipo", activeType);
+  const search = String(searchInput?.value || "").trim();
+  if (search) url.searchParams.set("buscar", search);
+  const state = { ...(history.state || {}), jhdSongsRoute: { type: activeType, search } };
+  if (mode === "push") history.pushState(state, "", `${url.pathname}${url.search}${url.hash}`);
+  else history.replaceState(state, "", `${url.pathname}${url.search}${url.hash}`);
+}
 
 async function loadRelations(songs) {
   const ids = songs.map((song) => song.id).filter(Boolean);
@@ -68,6 +88,8 @@ function renderSongs() {
 }
 
 async function loadSongs() {
+  readRoute();
+  saveRoute("replace");
   if ((categoryParam || albumParam) && searchInput && !searchInput.value) searchInput.placeholder = `Mostrando: ${categoryParam || albumParam}`;
   if (!client) { songsGrid.innerHTML = "<article class='song-card'><h3>Sin conexión</h3><p>No se pudo iniciar Supabase.</p></article>"; return; }
   const { data, error } = await client.from("songs").select("*").order("title", { ascending: true });
@@ -75,7 +97,14 @@ async function loadSongs() {
   allSongs = await loadRelations(data || []);
   renderSongs();
 }
-searchInput?.addEventListener("input", renderSongs);
-filterButtons.forEach((button) => button.addEventListener("click", () => { filterButtons.forEach((item) => item.classList.remove("active")); button.classList.add("active"); activeType = normalize(button.dataset.type); renderSongs(); }));
+
+searchInput?.addEventListener("input", () => { saveRoute("replace"); renderSongs(); });
+filterButtons.forEach((button) => button.addEventListener("click", () => {
+  activeType = normalize(button.dataset.type);
+  filterButtons.forEach((item) => item.classList.toggle("active", item === button));
+  saveRoute("push");
+  renderSongs();
+}));
+window.addEventListener("popstate", () => { readRoute(); renderSongs(); });
 initNavigation();
 loadSongs();
