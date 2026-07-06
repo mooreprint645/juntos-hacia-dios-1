@@ -7,6 +7,14 @@ let albumParam = "";
 let allSongs = [];
 let activeType = "";
 
+function applySongGridLayout() {
+  if (document.getElementById("jhdSongGridLayout")) return;
+  const style = document.createElement("style");
+  style.id = "jhdSongGridLayout";
+  style.textContent = `@media (min-width:561px) and (max-width:1100px){.songs-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.songs-grid .song-card{display:flex;flex-direction:column;min-height:245px}.songs-grid .song-btn{width:max-content;margin-top:auto}}`;
+  document.head.append(style);
+}
+
 const escapeHTML = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 function initNavigation() {
   const menuButton = document.querySelector("#menuToggle");
@@ -106,5 +114,6 @@ filterButtons.forEach((button) => button.addEventListener("click", () => {
   renderSongs();
 }));
 window.addEventListener("popstate", () => { readRoute(); renderSongs(); });
+applySongGridLayout();
 initNavigation();
 loadSongs();
