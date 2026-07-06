@@ -37,7 +37,7 @@ JHD.fetchSongsWithRelations = async (ids) => {
   const [artistRes, categoryRes, albumRes, linksRes, capoRes] = await Promise.all([
     JHD.sb.from("song_artists").select("song_id,role,sort_order,artists(id,name,slug,description,artist_type)").in("song_id", songIds).order("sort_order", { ascending: true }),
     JHD.sb.from("song_categories").select("song_id,categories(id,name,slug,description,song_type,parent_id,sort_order)").in("song_id", songIds),
-    JHD.sb.from("album_songs").select("song_id,sort_order,albums(id,title,slug,description,artist_id,year)").in("song_id", songIds).order("sort_order", { ascending: true }),
+    JHD.sb.from("album_songs").select("song_id,sort_order,albums(id,title,slug,description,artist_id)").in("song_id", songIds).order("sort_order", { ascending: true }),
     JHD.sb.from("song_links").select("*").in("song_id", songIds).order("sort_order", { ascending: true }),
     JHD.sb.from("song_capo_versions").select("*").in("song_id", songIds).order("sort_order", { ascending: true })
   ]);
