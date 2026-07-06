@@ -36,4 +36,15 @@
     AP.categoryNewParent = null;
     await apRefresh(editingId ? "Categoría actualizada." : "Categoría guardada.");
   }, true);
+
+  const addSongCategorySearch = () => {
+    if (document.querySelector("script[data-song-category-search]")) return;
+    const script = document.createElement("script");
+    script.dataset.songCategorySearch = "true";
+    script.src = "admin-song-category-search.js?v=2";
+    document.head.append(script);
+  };
+
+  if (document.readyState === "complete") addSongCategorySearch();
+  else window.addEventListener("load", addSongCategorySearch, { once: true });
 })();
