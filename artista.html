@@ -4,20 +4,38 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Artista | Juntos Hacia Dios</title>
-  <meta name="description" content="Perfil de artista, canciones, álbumes y colaboraciones.">
+  <meta name="description" content="Perfil de artista o ministerio con canciones, álbumes y colaboraciones.">
   <link rel="stylesheet" href="style.css?v=2">
   <link rel="stylesheet" href="detalles.css?v=1">
   <style>
-    .artist-profile-card{display:grid;gap:18px;padding:26px;border:1px solid var(--border);border-radius:24px;background:var(--card)}
-    .artist-profile-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-    .artist-profile-avatar{width:72px;height:72px;display:grid;place-items:center;border-radius:22px;background:var(--gold);color:#151515;font-size:1.35rem;font-weight:900}
-    .artist-profile-card h1{margin:0}.artist-profile-card p{margin:0;color:var(--muted);line-height:1.65}
-    .artist-section{margin-top:28px}.artist-section .section-heading{margin-bottom:14px}
-    .artist-song-list{display:grid;gap:10px}.artist-song-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;border:1px solid var(--border);border-radius:17px;background:var(--card);text-decoration:none;color:var(--text)}
-    .artist-song-row:hover{border-color:var(--gold);transform:translateY(-2px)}.artist-song-row h3{margin:4px 0}.artist-song-row p{margin:0;color:var(--muted)}
-    .artist-more{margin-top:14px;border:1px solid var(--border);border-radius:18px;background:var(--card-soft);padding:14px}.artist-more summary{cursor:pointer;color:var(--gold);font-weight:800}.artist-more .artist-song-list{margin-top:14px}
-    .artist-empty{padding:18px;border:1px dashed var(--border);border-radius:16px;color:var(--muted)}
-    @media(max-width:560px){.artist-profile-card{padding:20px}.artist-song-row{padding:14px}.artist-song-row>span{display:none}}
+    .song-page-section{max-width:1080px;padding-top:36px}
+    .artist-hero-card{display:flex;align-items:center;gap:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius,22px);padding:30px;box-shadow:var(--shadow);margin-bottom:30px}
+    .artist-avatar-public{width:118px;height:118px;min-width:118px;border-radius:50%;background:var(--gold);color:#151515;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:900}
+    .artist-hero-card h1{margin:0;color:var(--gold);font-size:clamp(2rem,6vw,4rem);line-height:1.05}
+    .artist-hero-card p{color:var(--muted);margin-top:10px;line-height:1.6}
+    .artist-profile-stats{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+    .artist-profile-stats span,.artist-profile-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 13px;border:1px solid rgba(246,196,83,.28);border-radius:999px;background:rgba(246,196,83,.12);color:var(--gold);font-weight:850;font-size:.86rem;text-decoration:none}
+    .artist-profile-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 10px}
+    .artist-profile-actions a:hover{background:var(--gold);color:#151515}
+    .artist-profile-section{margin:30px 0}
+    .artist-profile-section-header{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border)}
+    .artist-profile-section-header h2{margin:0;color:var(--gold)}
+    .artist-profile-section-header p{margin:4px 0 0;color:var(--muted)}
+    .artist-profile-search{margin:0}
+    .artist-profile-search label{display:block;margin-bottom:9px;color:var(--text);font-weight:800}
+    .artist-profile-search input{width:100%;padding:15px 18px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--text);outline:none}
+    .artist-profile-search input:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(246,196,83,.12)}
+    .artist-song-list{display:grid;gap:10px}
+    .artist-song-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--border);border-radius:18px;background:var(--card);color:var(--text);text-decoration:none;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+    .artist-song-row:hover{transform:translateY(-2px);border-color:rgba(246,196,83,.55);background:var(--card-soft)}
+    .artist-song-row h3{margin:0 0 6px;color:var(--text);font-size:1.12rem;line-height:1.25}
+    .artist-song-row p{margin:0;color:var(--muted);font-size:.92rem;line-height:1.4}
+    .artist-song-row .artist-row-icon{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(246,196,83,.13);color:var(--gold);font-size:1.3rem;font-weight:900}
+    .artist-more{margin-top:14px;border:1px solid var(--border);border-radius:18px;background:var(--card-soft);padding:14px 16px}
+    .artist-more summary{cursor:pointer;color:var(--gold);font-weight:900}
+    .artist-more .artist-song-list{margin-top:14px}
+    .artist-empty{padding:18px;border:1px dashed var(--border);border-radius:18px;background:var(--card-soft);color:var(--muted)}
+    @media(max-width:700px){.song-page-section{padding-top:22px}.artist-hero-card{display:block;padding:22px}.artist-avatar-public{width:132px;height:132px;min-width:132px;margin:0 auto 20px;font-size:2.6rem}.artist-profile-actions{flex-wrap:nowrap;overflow-x:auto;padding:3px 2px 8px}.artist-profile-actions a{flex:0 0 auto;white-space:nowrap}.artist-profile-section-header{display:block}.artist-profile-section-header .hero-kicker{margin-top:4px}.artist-song-row{padding:14px}.artist-song-row h3{font-size:1rem}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=1"></script>
@@ -33,10 +51,13 @@
     </nav>
   </header>
   <main>
-    <section class="hero"><div class="hero-content"><p class="hero-kicker">Artista</p><h1 id="pageTitle">Cargando perfil...</h1><p id="pageSubtitle">Un momento por favor.</p></div></section>
-    <section class="section" id="artistProfile"><article class="artist-profile-card"><p>Cargando información del artista...</p></article></section>
+    <section class="section song-page-section">
+      <div id="artistProfile">
+        <article class="artist-hero-card shimmer-card"><div class="artist-avatar-public">…</div><div><p class="hero-kicker">Cargando artista</p><h1>Un momento por favor</h1><p>Estamos preparando sus cantos y álbumes.</p></div></article>
+      </div>
+    </section>
   </main>
-  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="artistas.html">Artistas</a> · <a href="canciones.html">Canciones</a></p></footer>
+  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="artistas.html">Artistas</a> · <a href="canciones.html">Canciones</a> · <a href="categorias.html">Categorías</a></p></footer>
   <script>
     const db = window.supabaseClient;
     const $ = (selector) => document.querySelector(selector);
@@ -46,74 +67,100 @@
     const esc = (value) => String(value || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
     const norm = (value) => String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     const slugify = (value) => norm(value).replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)+/g,'');
-    const initials = (name) => String(name || 'JHD').split(/\s+/).slice(0,2).map((part) => part[0] || '').join('').toUpperCase();
-    const dateValue = (song) => { const value = Date.parse(song.created_at || song.updated_at || ''); return Number.isFinite(value) ? value : 0; };
-    const orderSongs = (items) => [...items].sort((a,b) => dateValue(b) - dateValue(a) || String(a.title || '').localeCompare(String(b.title || ''),'es'));
+    const initials = (name) => String(name || 'JHD').trim().split(/\s+/).slice(0,2).map((part) => part[0] || '').join('').toUpperCase();
+    const typeLabel = (type) => ({catolico:'Católico',cristiano:'Cristiano',mixto:'Mixto'})[norm(type)] || 'Artista';
+    const songDate = (song) => { const date = Date.parse(song.created_at || song.updated_at || ''); return Number.isFinite(date) ? date : 0; };
+    const songMeta = (song) => [song.song_type ? typeLabel(song.song_type) : '', song.tone ? `Tono ${song.tone}` : '', song.difficulty || ''].filter(Boolean).join(' · ') || 'Canto disponible';
+    const sortSongs = (list) => [...list].sort((a,b) => songDate(b) - songDate(a) || String(a.title || '').localeCompare(String(b.title || ''),'es'));
 
     function initNav(){
       const menu = $('#navMenu'), button = $('#menuToggle'), theme = $('#themeToggle');
       button?.addEventListener('click', () => menu?.classList.toggle('open'));
       const light = localStorage.getItem('jhd-theme') === 'light';
-      document.body.classList.toggle('light-mode', light); if(theme) theme.textContent = light ? '☀️' : '🌙';
+      document.body.classList.toggle('light-mode', light);
+      if(theme) theme.textContent = light ? '☀️' : '🌙';
       theme?.addEventListener('click', () => { const on = document.body.classList.toggle('light-mode'); localStorage.setItem('jhd-theme', on ? 'light':'dark'); theme.textContent = on ? '☀️':'🌙'; });
     }
-    function songRow(song){
-      return `<a class="artist-song-row" href="cancion.html?id=${encodeURIComponent(song.id)}"><div><p>${esc(song.song_type || 'Canción')}${song.tone ? ` · Tono ${esc(song.tone)}` : ''}</p><h3>${esc(song.title || 'Canción sin título')}</h3></div><span>›</span></a>`;
-    }
-    function albumCard(album){
-      return `<a class="quick-card" href="albumes.html?album=${encodeURIComponent(album.slug || album.title || album.id)}"><p class="hero-kicker">Álbum</p><h3>${esc(album.title || 'Sin título')}</h3><p>${esc(album.description || 'Ver canciones de este álbum.')}</p></a>`;
-    }
-    function collaborationCard(person, songCount){
-      const key = person.slug || slugify(person.name);
-      return `<a class="quick-card" href="artista.html?slug=${encodeURIComponent(key)}"><p class="hero-kicker">${songCount} ${songCount === 1 ? 'canción compartida' : 'canciones compartidas'}</p><h3>${esc(person.name || 'Artista')}</h3><p>${esc(person.artist_type || 'Colaboración')}</p></a>`;
-    }
     function empty(text){ return `<div class="artist-empty">${esc(text)}</div>`; }
+    function songRow(song, extraText){
+      const searchable = [song.title, song.tone, song.song_type, song.difficulty, extraText].filter(Boolean).join(' ');
+      return `<a class="artist-song-row artist-profile-song-item" data-search="${esc(norm(searchable))}" href="cancion.html?id=${encodeURIComponent(song.id)}"><div><h3>${esc(song.title || 'Canto sin título')}</h3><p>${esc(extraText || songMeta(song))}</p></div><span class="artist-row-icon">›</span></a>`;
+    }
+    function albumRow(album){
+      const target = album.slug || album.title || album.id;
+      return `<a class="artist-song-row" href="albumes.html?album=${encodeURIComponent(target)}"><div><h3>${esc(album.title || 'Álbum sin nombre')}</h3><p>${esc(album.description || 'Álbum registrado')}</p></div><span class="artist-row-icon">♪</span></a>`;
+    }
+    function filterArtistSongs(value){
+      const query = norm(value).trim();
+      document.querySelectorAll('.artist-profile-song-item').forEach((row) => {
+        const text = row.dataset.search || norm(row.textContent || '');
+        row.style.display = !query || text.includes(query) ? '' : 'none';
+      });
+    }
 
     async function loadProfile(){
-      const container = $('#artistProfile');
-      if (!db || (!idParam && !slugParam)){ container.innerHTML = empty('No se encontró el artista solicitado.'); return; }
+      const box = $('#artistProfile');
+      if(!db || (!idParam && !slugParam)){ box.innerHTML = empty('Artista no encontrado. Vuelve al listado e intenta nuevamente.'); return; }
       let artistQuery = db.from('artists').select('*');
       artistQuery = idParam ? artistQuery.eq('id',idParam) : artistQuery.eq('slug',slugParam);
       const { data: artist, error: artistError } = await artistQuery.maybeSingle();
-      if (artistError || !artist){ container.innerHTML = empty('No se pudo encontrar este artista.'); $('#pageTitle').textContent = 'Artista no encontrado'; $('#pageSubtitle').textContent = 'Vuelve al listado de artistas e intenta nuevamente.'; return; }
+      if(artistError || !artist){ box.innerHTML = empty('Este artista no existe o fue eliminado.'); return; }
       document.title = `${artist.name || 'Artista'} | Juntos Hacia Dios`;
-      $('#pageTitle').textContent = artist.name || 'Artista';
-      $('#pageSubtitle').textContent = artist.description || artist.artist_type || 'Artista del cancionero.';
-
-      const { data: ownRelations, error: ownError } = await db.from('song_artists').select('song_id,role').eq('artist_id',artist.id);
-      if (ownError){ container.innerHTML = empty(`No se pudieron cargar las canciones: ${ownError.message}`); return; }
-      const songIds = [...new Set((ownRelations || []).map((row) => row.song_id).filter(Boolean))];
-      const [songRes, relationRes, albumRes] = await Promise.all([
+      const ownResult = await db.from('song_artists').select('song_id').eq('artist_id',artist.id);
+      if(ownResult.error){ box.innerHTML = empty(`No se pudieron cargar las canciones: ${ownResult.error.message}`); return; }
+      const songIds = [...new Set((ownResult.data || []).map((row) => row.song_id).filter(Boolean))];
+      const [songsResult, relationsResult, albumsResult] = await Promise.all([
         songIds.length ? db.from('songs').select('*').in('id',songIds) : Promise.resolve({data:[],error:null}),
-        songIds.length ? db.from('song_artists').select('song_id,artist_id,role,artists(id,name,slug,artist_type)').in('song_id',songIds) : Promise.resolve({data:[],error:null}),
+        songIds.length ? db.from('song_artists').select('song_id,artist_id,artists(id,name,slug,artist_type)').in('song_id',songIds) : Promise.resolve({data:[],error:null}),
         db.from('albums').select('*').eq('artist_id',artist.id).order('title',{ascending:true})
       ]);
-      if (songRes.error || relationRes.error || albumRes.error){ container.innerHTML = empty('No se pudo completar el perfil del artista.'); return; }
-      const songs = orderSongs(songRes.data || []);
-      const recent = songs.slice(0,4);
-      const visibleSongs = songs.slice(0,8);
-      const hiddenSongs = songs.slice(8);
-      const collaborators = new Map();
-      (relationRes.data || []).forEach((row) => {
-        const collaborator = row.artists;
-        if (!collaborator || String(row.artist_id) === String(artist.id)) return;
-        const key = String(collaborator.id);
-        if (!collaborators.has(key)) collaborators.set(key,{ person: collaborator, songs: new Set() });
-        collaborators.get(key).songs.add(String(row.song_id));
-      });
-      const collaborationList = [...collaborators.values()].sort((a,b) => a.person.name.localeCompare(b.person.name,'es'));
-      container.innerHTML = `
-        <article class="artist-profile-card">
-          <div class="artist-profile-head"><div class="artist-profile-avatar">${esc(initials(artist.name))}</div><div><p class="hero-kicker">${esc(artist.artist_type || 'Artista')}</p><h1>${esc(artist.name || 'Artista')}</h1></div></div>
-          <p>${esc(artist.description || 'Artista o ministerio dentro del cancionero.')}</p>
-          <div class="song-filters"><span class="filter-btn">${songs.length} ${songs.length === 1 ? 'canción' : 'canciones'}</span><span class="filter-btn">${(albumRes.data || []).length} ${(albumRes.data || []).length === 1 ? 'álbum' : 'álbumes'}</span><span class="filter-btn">${collaborationList.length} ${collaborationList.length === 1 ? 'colaboración' : 'colaboraciones'}</span></div>
-        </article>
-        <section class="artist-section"><div class="section-heading split-heading"><div><p class="hero-kicker">Lo más reciente</p><h2>Canciones recientes</h2></div><a class="text-link" href="#todasLasCanciones">Ver canciones</a></div><div class="songs-grid">${recent.length ? recent.map(songRow).join('') : empty('Aún no hay canciones publicadas para este artista.')}</div></section>
-        <section class="artist-section" id="todasLasCanciones"><div class="section-heading"><p class="hero-kicker">Cancionero</p><h2>Canciones</h2></div><div class="artist-song-list">${visibleSongs.length ? visibleSongs.map(songRow).join('') : empty('Aún no hay canciones disponibles.')}</div>${hiddenSongs.length ? `<details class="artist-more"><summary>Ver las ${hiddenSongs.length} canciones restantes</summary><div class="artist-song-list">${hiddenSongs.map(songRow).join('')}</div></details>` : ''}</section>
-        <section class="artist-section"><div class="section-heading"><p class="hero-kicker">Discografía</p><h2>Álbumes</h2></div><div class="quick-cards">${(albumRes.data || []).length ? (albumRes.data || []).map(albumCard).join('') : empty('Este artista aún no tiene álbumes registrados.')}</div></section>
-        <section class="artist-section"><div class="section-heading"><p class="hero-kicker">Juntos en canción</p><h2>Colaboraciones</h2></div><div class="quick-cards">${collaborationList.length ? collaborationList.map((item) => collaborationCard(item.person,item.songs.size)).join('') : empty('Aún no hay colaboraciones registradas para este artista.')}</div></section>`;
+      if(songsResult.error || relationsResult.error || albumsResult.error){ box.innerHTML = empty('No se pudo completar el perfil del artista.'); return; }
+      const songs = sortSongs(songsResult.data || []);
+      const recentSongs = songs.slice(0,3);
+      const firstEight = songs.slice(0,8);
+      const remainingSongs = songs.slice(8);
+      const relationsBySong = new Map();
+      (relationsResult.data || []).forEach((row) => { if(!relationsBySong.has(String(row.song_id))) relationsBySong.set(String(row.song_id),[]); if(row.artists) relationsBySong.get(String(row.song_id)).push(row.artists); });
+      const collaborations = songs.filter((song) => (relationsBySong.get(String(song.id)) || []).some((other) => String(other.id) !== String(artist.id)));
+      const otherNames = (song) => (relationsBySong.get(String(song.id)) || []).filter((other) => String(other.id) !== String(artist.id)).map((other) => other.name).filter(Boolean).join(' · ');
+      const albums = albumsResult.data || [];
+      box.innerHTML = `
+        <section class="artist-hero-card">
+          <div class="artist-avatar-public">${esc(initials(artist.name))}</div>
+          <div>
+            <p class="hero-kicker">${esc(typeLabel(artist.artist_type || artist.type))}</p>
+            <h1>${esc(artist.name || 'Sin nombre')}</h1>
+            <p>${esc(artist.description || 'Ministerio o artista registrado.')}</p>
+            <div class="artist-profile-stats"><span>${songs.length} canto${songs.length === 1 ? '' : 's'}</span><span>${albums.length} álbum${albums.length === 1 ? '' : 'es'}</span><span>${collaborations.length} colaboración${collaborations.length === 1 ? '' : 'es'}</span></div>
+            <nav class="artist-profile-actions"><a href="#cancionesArtista">Canciones</a><a href="#albumesArtista">Álbumes</a><a href="#colaboracionesArtista">Colaboraciones</a></nav>
+          </div>
+        </section>
+        <section class="artist-profile-section artist-profile-search">
+          <label for="artistProfileSearchInput">Buscar canciones de este artista</label>
+          <input id="artistProfileSearchInput" type="search" placeholder="Buscar por título, tono o tipo...">
+        </section>
+        <section class="artist-profile-section" id="recientesArtista">
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Lo más reciente</p><h2>Canciones recientes</h2></div></div>
+          <div class="artist-song-list">${recentSongs.length ? recentSongs.map((song) => songRow(song)).join('') : empty('Este artista aún no tiene cantos publicados.')}</div>
+        </section>
+        <section class="artist-profile-section" id="cancionesArtista">
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Cancionero</p><h2>Cantos de este artista</h2></div><p>${songs.length} en total</p></div>
+          <div class="artist-song-list">${firstEight.length ? firstEight.map((song) => songRow(song)).join('') : empty('Este artista aún no tiene cantos registrados.')}</div>
+          ${remainingSongs.length ? `<details class="artist-more"><summary>Ver las ${remainingSongs.length} canciones restantes</summary><div class="artist-song-list">${remainingSongs.map((song) => songRow(song)).join('')}</div></details>` : ''}
+        </section>
+        <section class="artist-profile-section" id="albumesArtista">
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Discografía</p><h2>Álbumes</h2></div></div>
+          <div class="artist-song-list">${albums.length ? albums.map(albumRow).join('') : empty('Este artista aún no tiene álbumes registrados.')}</div>
+        </section>
+        <section class="artist-profile-section" id="colaboracionesArtista">
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Juntos en canción</p><h2>Colaboraciones</h2></div></div>
+          <div class="artist-song-list">${collaborations.length ? collaborations.map((song) => songRow(song, otherNames(song) ? `Con ${otherNames(song)} · ${songMeta(song)}` : songMeta(song))).join('') : empty('Aún no hay colaboraciones registradas para este artista.')}</div>
+        </section>`;
+      $('#artistProfileSearchInput')?.addEventListener('input', (event) => filterArtistSongs(event.target.value));
     }
-    initNav(); loadProfile(); document.getElementById('year').textContent = new Date().getFullYear();
+    initNav();
+    loadProfile();
+    $('#year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
