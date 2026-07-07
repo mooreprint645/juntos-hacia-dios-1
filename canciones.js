@@ -20,7 +20,18 @@ let loading = false;
 
 const escapeHTML = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 const normalize = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const names = (items) => (items || []).map((item) => item?.name || item?.title || "").filter(Boolean).join(" · ");
+const names = (items) => (Array.isArray(items) ? items : []).map((item) => item?.name || item?.title || "").filter(Boolean).join(" · ");
+
+function jsonList(value) {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== "string") return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
 
 function initNavigation() {
   const menuButton = document.querySelector("#menuToggle");
@@ -66,44 +77,9 @@ function saveRoute(mode = "replace") {
   else history.replaceState(state, "", next);
 }
 
-async function loadRelations(songs) {
-  const ids = songs.map((song) => song.id).filter(Boolean);
-  if (!ids.length) return songs;
-  const [artistRes, categoryRes, albumRes] = await Promise.all([
-    client.from("song_artists").select("song_id,artists(id,name,artist_type)").in("song_id", ids),
-    client.from("song_categories").select("song_id,categories(id,name,song_type,slug)").in("song_id", ids),
-    client.from("album_songs").select("song_id,albums(id,title,slug)").in("song_id", ids)
-  ]);
-  const relationError = [artistRes, categoryRes, albumRes].find((result) => result.error)?.error;
-  if (relationError) throw relationError;
-
-  const artistsBySong = new Map();
-  const categoriesBySong = new Map();
-  const albumsBySong = new Map();
-  (artistRes.data || []).forEach((row) => {
-    if (!artistsBySong.has(row.song_id)) artistsBySong.set(row.song_id, []);
-    if (row.artists) artistsBySong.get(row.song_id).push(row.artists);
-  });
-  (categoryRes.data || []).forEach((row) => {
-    if (!categoriesBySong.has(row.song_id)) categoriesBySong.set(row.song_id, []);
-    if (row.categories) categoriesBySong.get(row.song_id).push(row.categories);
-  });
-  (albumRes.data || []).forEach((row) => {
-    if (!albumsBySong.has(row.song_id)) albumsBySong.set(row.song_id, []);
-    if (row.albums) albumsBySong.get(row.song_id).push(row.albums);
-  });
-
-  return songs.map((song) => ({
-    ...song,
-    _artists: artistsBySong.get(song.id) || [],
-    _categories: categoriesBySong.get(song.id) || [],
-    _albums: albumsBySong.get(song.id) || []
-  }));
-}
-
 async function getCategories() {
   if (categoriesCache) return categoriesCache;
-  const { data, error } = await client.from("categories").select("id,name,slug,parent_id");
+  const { data, error } = await client.from("categories").select("id,name,slug");
   if (error) throw error;
   categoriesCache = data || [];
   return categoriesCache;
@@ -117,84 +93,24 @@ async function getAlbums() {
   return albumsCache;
 }
 
-function descendantIds(categoryId, categories) {
-  const ids = new Set([String(categoryId)]);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    categories.forEach((category) => {
-      const id = String(category.id || "");
-      if (category.parent_id && ids.has(String(category.parent_id)) && !ids.has(id)) {
-        ids.add(id);
-        changed = true;
-      }
-    });
-  }
-  return ids;
+function findRecord(items, value, nameField) {
+  const key = normalize(value);
+  return (items || []).find((item) => String(item.id) === String(value) || normalize(item.slug) === key || normalize(item[nameField]) === key) || null;
 }
 
-async function songIdsFromJoin(table, column, ids) {
-  if (!ids.length) return new Set();
-  const { data, error } = await client.from(table).select("song_id").in(column, ids);
-  if (error) throw error;
-  return new Set((data || []).map((row) => String(row.song_id)).filter(Boolean));
-}
-
-function intersection(sets) {
-  if (!sets.length) return null;
-  const [first, ...rest] = sets;
-  return new Set([...first].filter((id) => rest.every((set) => set.has(id))));
-}
-
-async function searchSongIds(query) {
-  const term = String(query || "").trim();
-  if (!term) return null;
-  const pattern = `%${term}%`;
-  const [titleRes, toneRes, difficultyRes, typeRes, artistsRes, categoriesRes, albumsRes] = await Promise.all([
-    client.from("songs").select("id").ilike("title", pattern).limit(1000),
-    client.from("songs").select("id").ilike("tone", pattern).limit(1000),
-    client.from("songs").select("id").ilike("difficulty", pattern).limit(1000),
-    client.from("songs").select("id").ilike("song_type", pattern).limit(1000),
-    client.from("artists").select("id").ilike("name", pattern).limit(500),
-    client.from("categories").select("id").ilike("name", pattern).limit(500),
-    client.from("albums").select("id").ilike("title", pattern).limit(500)
-  ]);
-  const error = [titleRes, toneRes, difficultyRes, typeRes, artistsRes, categoriesRes, albumsRes].find((result) => result.error)?.error;
-  if (error) throw error;
-
-  const direct = new Set([
-    ...(titleRes.data || []),
-    ...(toneRes.data || []),
-    ...(difficultyRes.data || []),
-    ...(typeRes.data || [])
-  ].map((row) => String(row.id)));
-
-  const [artistSongs, categorySongs, albumSongs] = await Promise.all([
-    songIdsFromJoin("song_artists", "artist_id", (artistsRes.data || []).map((row) => row.id)),
-    songIdsFromJoin("song_categories", "category_id", (categoriesRes.data || []).map((row) => row.id)),
-    songIdsFromJoin("album_songs", "album_id", (albumsRes.data || []).map((row) => row.id))
-  ]);
-  [artistSongs, categorySongs, albumSongs].forEach((ids) => ids.forEach((id) => direct.add(id)));
-  return direct;
-}
-
-async function resolveSongIds() {
-  const restrictions = [];
-  const query = String(searchInput?.value || "").trim();
+async function resolveRouteFilters() {
+  const filters = { categoryId: null, albumId: null, empty: false };
   if (categoryParam) {
-    const categories = await getCategories();
-    const key = normalize(categoryParam);
-    const category = categories.find((item) => String(item.id) === String(categoryParam) || normalize(item.slug) === key || normalize(item.name) === key);
-    restrictions.push(category ? await songIdsFromJoin("song_categories", "category_id", [...descendantIds(category.id, categories)]) : new Set());
+    const category = findRecord(await getCategories(), categoryParam, "name");
+    if (!category) filters.empty = true;
+    else filters.categoryId = category.id;
   }
   if (albumParam) {
-    const albums = await getAlbums();
-    const key = normalize(albumParam);
-    const album = albums.find((item) => String(item.id) === String(albumParam) || normalize(item.slug) === key || normalize(item.title) === key);
-    restrictions.push(album ? await songIdsFromJoin("album_songs", "album_id", [album.id]) : new Set());
+    const album = findRecord(await getAlbums(), albumParam, "title");
+    if (!album) filters.empty = true;
+    else filters.albumId = album.id;
   }
-  if (query) restrictions.push(await searchSongIds(query));
-  return intersection(restrictions);
+  return filters;
 }
 
 function setStatus(message) {
@@ -212,6 +128,7 @@ function updateLoadMore() {
 function renderSongs() {
   if (!songsGrid) return;
   setStatus(`${totalResults} ${totalResults === 1 ? "canción encontrada" : "canciones encontradas"}`);
+
   if (!visibleSongs.length) {
     songsGrid.innerHTML = "<article class='song-card'><h3>Sin resultados</h3><p>Prueba otro nombre, artista, tono o filtro.</p></article>";
     if (loadMoreButton) {
@@ -223,12 +140,12 @@ function renderSongs() {
   }
 
   songsGrid.innerHTML = visibleSongs.map((song) => {
-    const title = escapeHTML(song.title || song.name || "Canción sin título");
-    const type = escapeHTML(song.song_type || song.type || "Canción");
-    const artistText = escapeHTML(names(song._artists) || song.artist || song.artist_name || "Sin artista");
-    const categoryText = escapeHTML(names(song._categories) || song.category || song.category_name || "");
-    const albumText = escapeHTML(names(song._albums) || song.album || song.album_name || "");
-    const tone = escapeHTML(song.tone || song.key || "");
+    const title = escapeHTML(song.title || "Canción sin título");
+    const type = escapeHTML(song.song_type || "Canción");
+    const artistText = escapeHTML(names(song._artists) || "Sin artista");
+    const categoryText = escapeHTML(names(song._categories));
+    const albumText = escapeHTML(names(song._albums));
+    const tone = escapeHTML(song.tone || "");
     const href = `cancion.html?id=${encodeURIComponent(song.id || "")}`;
     return `<article class="song-card song-preview-card"><div class="song-preview-main"><h3>${title}</h3><p>${artistText}</p><p>${type}${categoryText ? ` · ${categoryText}` : ""}${albumText ? ` · ${albumText}` : ""}</p>${tone ? `<p><strong>Tono:</strong> ${tone}</p>` : ""}</div><div class="song-card-actions"><a class="song-btn small-btn" href="${href}">Ver canción</a><button class="song-btn small-btn secondary" type="button" data-share-title="${title}" data-share-url="${href}" aria-label="Compartir ${title}">Compartir</button></div></article>`;
   }).join("");
@@ -272,6 +189,23 @@ function beginFreshLoad() {
   }
 }
 
+function rowToSong(row) {
+  return {
+    ...row,
+    _artists: jsonList(row.artists),
+    _categories: jsonList(row.categories),
+    _albums: jsonList(row.albums)
+  };
+}
+
+function rpcErrorMessage(error) {
+  const detail = String(error?.message || "");
+  if (error?.code === "PGRST202" || /search_songs_catalog/i.test(detail)) {
+    return "Falta activar la búsqueda escalable. Ejecuta el archivo supabase-song-catalog-search.sql en Supabase y vuelve a abrir esta página.";
+  }
+  return detail || "Revisa la conexión e inténtalo de nuevo.";
+}
+
 async function fetchSongs(append = false) {
   if (!client || (append && loading)) return;
   const token = ++requestVersion;
@@ -281,9 +215,9 @@ async function fetchSongs(append = false) {
   else updateLoadMore();
 
   try {
-    const ids = await resolveSongIds();
+    const filters = await resolveRouteFilters();
     if (token !== requestVersion) return;
-    if (ids && !ids.size) {
+    if (filters.empty) {
       page = 0;
       totalResults = 0;
       visibleSongs = [];
@@ -292,22 +226,22 @@ async function fetchSongs(append = false) {
       return;
     }
 
-    let query = client.from("songs").select("*").order("title", { ascending: true });
-    if (activeType) query = query.eq("song_type", activeType);
-    if (ids) query = query.in("id", [...ids]);
-    const { data, error } = await query;
+    const { data, error } = await client.rpc("search_songs_catalog", {
+      p_query: String(searchInput?.value || "").trim() || null,
+      p_song_type: activeType || null,
+      p_category_id: filters.categoryId,
+      p_album_id: filters.albumId,
+      p_limit: PAGE_SIZE,
+      p_offset: currentPage * PAGE_SIZE
+    });
     if (error) throw error;
     if (token !== requestVersion) return;
 
-    const allSongs = data || [];
-    const start = currentPage * PAGE_SIZE;
-    const batch = allSongs.slice(start, start + PAGE_SIZE);
-    const hydrated = await loadRelations(batch);
-    if (token !== requestVersion) return;
-
+    const rows = (data || []).map(rowToSong);
+    const serverTotal = rows.length ? Number(rows[0].total_count || 0) : 0;
     page = currentPage;
-    totalResults = allSongs.length;
-    visibleSongs = append ? [...visibleSongs, ...hydrated] : hydrated;
+    totalResults = append ? (rows.length ? serverTotal : visibleSongs.length) : serverTotal;
+    visibleSongs = append ? [...visibleSongs, ...rows] : rows;
     loading = false;
     renderSongs();
   } catch (error) {
@@ -315,7 +249,7 @@ async function fetchSongs(append = false) {
     totalResults = 0;
     visibleSongs = [];
     loading = false;
-    if (songsGrid) songsGrid.innerHTML = `<article class='song-card'><h3>Error al cargar</h3><p>${escapeHTML(error?.message || "Revisa la conexión e inténtalo de nuevo.")}</p></article>`;
+    if (songsGrid) songsGrid.innerHTML = `<article class='song-card'><h3>Error al cargar</h3><p>${escapeHTML(rpcErrorMessage(error))}</p></article>`;
     setStatus("No se pudieron cargar las canciones.");
     if (loadMoreButton) {
       loadMoreButton.hidden = true;
@@ -349,11 +283,13 @@ searchInput?.addEventListener("input", () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => resetAndFetch("replace"), 260);
 });
+
 filterButtons.forEach((button) => button.addEventListener("click", () => {
   activeType = normalize(button.dataset.type);
   updateFilterState();
   resetAndFetch("push");
 }));
+
 loadMoreButton?.addEventListener("click", () => fetchSongs(true));
 window.addEventListener("popstate", () => {
   readRoute();
