@@ -8,21 +8,3 @@
 }
 
 #homeFaithAccess .home-access-featured-song small{color:var(--gold)}
-
-/* Prioridad para modo escritorio, incluso mientras se actualiza caché. */
-@media (min-width:901px){
-  .navbar .menu-toggle{display:none!important}
-  .navbar .nav-menu{
-    position:static!important;
-    display:flex!important;
-    width:auto!important;
-    padding:0!important;
-    flex-direction:row!important;
-    align-items:center!important;
-    border:0!important;
-    border-radius:0!important;
-    background:transparent!important;
-    box-shadow:none!important;
-  }
-  .navbar .nav-menu a{min-height:auto!important;padding:10px 12px!important;text-align:center!important}
-}
