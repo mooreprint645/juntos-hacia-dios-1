@@ -18,7 +18,8 @@ body { background: radial-gradient(circle at 15% 0%, rgba(246,196,83,.09), trans
 .home-discovery-search { box-shadow: 0 10px 24px rgba(0,0,0,.16); }
 .brand-icon { box-shadow: 0 7px 18px rgba(246,196,83,.16); }
 
-@media (max-width: 900px) {
+/* En tablet y móvil el menú deja de comprimirse: se muestra con botón. */
+@media (max-width: 1180px) {
   .navbar { position: relative; min-height: 68px; gap: 12px; }
   .menu-toggle { display: grid; min-width: 44px; min-height: 44px; place-items: center; border-radius: 14px; }
   .nav-menu {
