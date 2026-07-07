@@ -13,15 +13,12 @@
   const path = (value) => { const out=[]; const seen=new Set(); let x=get(value); while(x && !seen.has(id(x.id))) { seen.add(id(x.id)); out.unshift(x); x=get(x.parent_id); } return out; };
   const pathText = (value) => path(value).map((x) => x.name || "Categoría").join(" › ");
 
-  const style = document.createElement("style");
-  style.id = "jhdSongFolderPickerStyle";
-  style.textContent = `.jhd-song-category-native{display:none!important}.jhd-song-folder-picker{display:grid;gap:8px;margin-top:8px}.jhd-scp-summary{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--border);border-radius:13px;background:var(--card-soft)}.jhd-scp-summary small{display:block;color:var(--muted);font-size:.78rem}.jhd-scp-summary strong{display:block;color:var(--gold);font-size:.9rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.jhd-scp-panel{display:grid;gap:10px;padding:12px;border:1px solid var(--border);border-radius:15px;background:var(--card-soft)}.jhd-scp-text{margin:0;color:var(--muted);font-size:.87rem}.jhd-scp-text strong{color:var(--gold)}.jhd-scp-types,.jhd-scp-list{display:grid;gap:8px}.jhd-scp-types button,.jhd-scp-open{border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);padding:11px;text-align:left;font:inherit;font-weight:800;cursor:pointer}.jhd-scp-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.jhd-scp-tools input{flex:1;min-width:150px}.jhd-scp-list{max-height:260px;overflow:auto}.jhd-scp-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px;border:1px solid var(--border);border-radius:13px;background:var(--card)}.jhd-scp-open{border:0;background:transparent;padding:0;min-width:0}.jhd-scp-open small{display:block;margin-top:3px;color:var(--muted);font-size:.78rem}.jhd-scp-use{border:0;border-radius:10px;background:var(--gold);color:#1c1b18;padding:8px 10px;font:inherit;font-size:.8rem;font-weight:900;cursor:pointer}@media(max-width:620px){.jhd-scp-row{grid-template-columns:1fr}.jhd-scp-use{width:100%}.jhd-scp-summary strong{max-width:160px}}`;
-  if (!document.getElementById(style.id)) document.head.append(style);
-
   function setup(select) {
     const label = select.closest("label");
     if (!label || label.dataset.jhdFolderPicker) return;
     label.dataset.jhdFolderPicker = "yes";
+    const grid = label.parentElement;
+    if (grid?.classList.contains("admin-form-grid")) grid.classList.add("jhd-song-category-grid");
     label.querySelector(".song-cat-search")?.remove();
     select.classList.add("jhd-song-category-native");
     const host = document.createElement("div");
