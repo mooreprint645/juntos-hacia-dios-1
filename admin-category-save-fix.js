@@ -7,6 +7,12 @@
     return type === "catolico" || type === "cristiano" ? type : "";
   };
 
+  const parentLabel = (parentId) => {
+    if (!parentId) return "Todas";
+    const row = (AP.categories || []).find((category) => String(category.id) === String(parentId));
+    return row?.name || "esta carpeta";
+  };
+
   document.addEventListener("submit", async (event) => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement) || form.id !== "categoryAdminForm") return;
@@ -28,11 +34,30 @@
     };
 
     const editingId = AP.edits?.category || null;
+    const duplicate = (AP.categories || []).find((category) =>
+      String(category.id) !== String(editingId || "") &&
+      String(category.slug || "") === payload.slug &&
+      String(category.parent_id || "") === String(payload.parent_id || "") &&
+      normalizeType(category.song_type) === payload.song_type
+    );
+
+    if (duplicate) {
+      AP.edits.category = duplicate.id;
+      AP.filters.categories = duplicate.name || name;
+      if (typeof apRenderView === "function") apRenderView();
+      return apNote(`“${duplicate.name}” ya existe dentro de ${parentLabel(payload.parent_id)}. Se abrió para editarla.`, true);
+    }
+
     const result = editingId
       ? await AdminPro.from("categories").update(payload).eq("id", editingId)
       : await AdminPro.from("categories").insert([payload]);
 
-    if (result.error) return apNote(`Error: ${result.error.message}`, true);
+    if (result.error) {
+      if (String(result.error.message || "").includes("categories_slug_parent_type_unique")) {
+        return apNote("Ya existe una categoría con ese nombre dentro de esta carpeta y tipo. Usa la búsqueda para editarla.", true);
+      }
+      return apNote(`Error: ${result.error.message}`, true);
+    }
 
     AP.edits.category = null;
     AP.categoryNewParent = null;
