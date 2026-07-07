@@ -1,3 +1,5 @@
+@import url("mobile-experience.css?v=1");
+
 /* Capa pública de superficies: la navegación usa exactamente la base de style.css, igual que Admin. */
 body.light-mode {
   --bg: #0f1117;
