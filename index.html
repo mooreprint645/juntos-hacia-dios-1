@@ -1,36 +1,38 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Juntos Hacia Dios</title>
-<meta name="description" content="Cancionero cristiano y católico con letras, acordes y recursos.">
-<link rel="stylesheet" href="style.css?v=4">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="Supabase.js?v=1"></script>
-<script src="public-core.js?v=3" defer></script>
-<script src="app.js?v=10" defer></script>
-<script src="home-search-fast.js?v=2" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Juntos Hacia Dios</title>
+  <meta name="description" content="Cancionero cristiano y católico con letras, acordes y recursos.">
+  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="public-accessibility.css?v=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=1"></script>
+  <script src="public-core.js?v=4" defer></script>
+  <script src="home.js?v=1" defer></script>
 </head>
 <body>
-<header><nav class="navbar">
-<a class="brand" href="index.html"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
-<button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
-<div class="nav-menu" id="navMenu">
-<a class="active" href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="albumes.html">Álbumes</a><a href="donaciones.html">Donaciones</a>
-</div>
-</nav></header>
-<main>
-<section class="hero"><div class="hero-content">
-<p class="hero-kicker">Cancionero cristiano y católico</p>
-<h1>Cantos para orar, alabar y servir</h1>
-<p>Encuentra letras, acordes, tonos, artistas y categorías para tu comunidad.</p>
-<div class="hero-actions"><a class="song-btn" href="canciones.html">Ver canciones</a><a class="song-btn secondary" href="categorias.html">Explorar categorías</a></div>
-</div></section>
-<section class="section"><div class="section-heading split-heading"><div><p class="hero-kicker">Recientes</p><h2>Últimas canciones</h2></div><a class="text-link" href="canciones.html">Ver todas</a></div><div class="songs-grid" id="homeSongsGrid"><article class="song-card shimmer-card"><h3>Cargando canciones...</h3><p>Un momento por favor.</p></article></div></section>
-<section class="section"><div class="section-heading split-heading"><div><p class="hero-kicker">Ministerios</p><h2>Artistas recientes</h2></div><a class="text-link" href="artistas.html">Ver artistas</a></div><div class="artists-grid" id="homeArtistsGrid"><article class="artist-card shimmer-card"><h3>Cargando artistas...</h3><p>Un momento por favor.</p></article></div></section>
-</main>
-<footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a> · <a href="categorias.html">Categorías</a></p></footer>
-<script>document.getElementById("year").textContent=new Date().getFullYear()</script>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a class="active" href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="albumes.html">Álbumes</a><a href="donaciones.html">Donaciones</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="hero"><div class="hero-content">
+      <p class="hero-kicker">Cancionero cristiano y católico</p>
+      <h1>Cantos para orar, alabar y servir</h1>
+      <p>Encuentra letras, acordes, tonos, artistas y categorías para tu comunidad.</p>
+      <div class="hero-actions"><a class="song-btn" href="canciones.html">Ver canciones</a><a class="song-btn secondary" href="categorias.html">Explorar categorías</a></div>
+    </div></section>
+    <section class="section"><div class="section-heading split-heading"><div><p class="hero-kicker">Recientes</p><h2>Últimas canciones</h2></div><a class="text-link" href="canciones.html">Ver todas</a></div><div class="songs-grid" id="homeSongsGrid" aria-live="polite"><article class="song-card shimmer-card"><h3>Cargando canciones...</h3><p>Un momento por favor.</p></article></div></section>
+    <section class="section"><div class="section-heading split-heading"><div><p class="hero-kicker">Ministerios</p><h2>Artistas recientes</h2></div><a class="text-link" href="artistas.html">Ver artistas</a></div><div class="artists-grid" id="homeArtistsGrid" aria-live="polite"><article class="artist-card shimmer-card"><h3>Cargando artistas...</h3><p>Un momento por favor.</p></article></div></section>
+  </main>
+  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a> · <a href="categorias.html">Categorías</a></p></footer>
+  <script>document.getElementById("year").textContent=new Date().getFullYear()</script>
 </body>
 </html>
