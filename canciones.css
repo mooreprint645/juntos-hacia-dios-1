@@ -1,1 +1,1 @@
-.songs-grid .song-card{display:flex;flex-direction:column}.songs-grid .song-card .song-btn{margin-top:auto;align-self:flex-start}@media(max-width:560px){.songs-grid .song-card .song-btn{align-self:stretch}}
+.songs-grid .song-card{display:flex;flex-direction:column}.songs-grid .song-card .song-btn{margin-top:auto;align-self:flex-start}#songsLoadMore[hidden]{display:none!important}@media(max-width:560px){.songs-grid .song-card .song-btn{align-self:stretch}}
