@@ -58,6 +58,20 @@ async function loadRelations(songs) {
   return songs.map((song) => ({ ...song, _artists: artistsBySong.get(song.id) || [], _categories: categoriesBySong.get(song.id) || [], _albums: albumsBySong.get(song.id) || [] }));
 }
 
+async function shareSong(title, url, button) {
+  const text = `Te comparto “${title}” en Juntos Hacia Dios.`;
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url }); return; }
+    catch (error) { if (error?.name === "AbortError") return; }
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    const original = button.textContent;
+    button.textContent = "Enlace copiado";
+    setTimeout(() => { button.textContent = original; }, 1800);
+  } catch (_) { window.prompt("Copia este enlace:", url); }
+}
+
 function renderSongs() {
   const query = normalize(searchInput?.value);
   const categoryQuery = normalize(categoryParam);
@@ -83,8 +97,10 @@ function renderSongs() {
     const albumText = escapeHTML(names(song._albums) || song.album || song.album_name || "");
     const tone = escapeHTML(song.tone || song.key || "");
     const id = encodeURIComponent(song.id || "");
-    return `<article class="song-card"><h3>${title}</h3><p>${artistText}</p><p>${type}${categoryText ? ` · ${categoryText}` : ""}${albumText ? ` · ${albumText}` : ""}</p>${tone ? `<p><strong>Tono:</strong> ${tone}</p>` : ""}<a class="song-btn" href="cancion.html?id=${id}">Ver canción</a></article>`;
+    const href = `cancion.html?id=${id}`;
+    return `<article class="song-card song-preview-card"><div class="song-preview-main"><h3>${title}</h3><p>${artistText}</p><p>${type}${categoryText ? ` · ${categoryText}` : ""}${albumText ? ` · ${albumText}` : ""}</p>${tone ? `<p><strong>Tono:</strong> ${tone}</p>` : ""}</div><div class="song-card-actions"><a class="song-btn small-btn" href="${href}">Ver canción</a><button class="song-btn small-btn secondary" type="button" data-share-title="${title}" data-share-url="${href}">Compartir</button></div></article>`;
   }).join("");
+  songsGrid.querySelectorAll("[data-share-url]").forEach((button) => button.addEventListener("click", () => shareSong(button.dataset.shareTitle || "Canción", new URL(button.dataset.shareUrl, location.href).href, button)));
 }
 
 async function loadSongs() {
