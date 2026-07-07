@@ -5,18 +5,27 @@ let donationText = "Gracias por apoyar el proyecto Juntos Hacia Dios.";
 function initNavigation() {
   const menuButton = $("#menuToggle");
   const menu = $("#navMenu");
-  const themeButton = $("#themeToggle");
-  menuButton?.addEventListener("click", () => menu?.classList.toggle("open"));
-  if (localStorage.getItem("jhd-theme") === "light") { document.body.classList.add("light-mode"); if (themeButton) themeButton.textContent = "☀️"; }
-  themeButton?.addEventListener("click", () => { document.body.classList.toggle("light-mode"); const light = document.body.classList.contains("light-mode"); localStorage.setItem("jhd-theme", light ? "light" : "dark"); themeButton.textContent = light ? "☀️" : "🌙"; });
+  menuButton?.setAttribute("aria-expanded", "false");
+  menuButton?.addEventListener("click", () => {
+    const open = Boolean(menu?.classList.toggle("open"));
+    menuButton.setAttribute("aria-expanded", String(open));
+  });
+  document.querySelectorAll("#navMenu a").forEach((link) => link.addEventListener("click", () => {
+    menu?.classList.remove("open");
+    menuButton?.setAttribute("aria-expanded", "false");
+  }));
 }
 
 function initCopy() {
   const button = $("#copyDonation");
   const message = $("#donationMessage");
   button?.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(donationText); if (message) message.textContent = "Información copiada."; }
-    catch { if (message) message.textContent = donationText; }
+    try {
+      await navigator.clipboard.writeText(donationText);
+      if (message) message.textContent = "Información copiada.";
+    } catch {
+      if (message) message.textContent = donationText;
+    }
   });
 }
 
@@ -25,8 +34,19 @@ function showDetails(data) {
   if (!values.length) return;
   const box = document.createElement("div");
   box.className = "song-card";
-  values.forEach(([label, value]) => { const row = document.createElement("p"); const strong = document.createElement("strong"); strong.textContent = `${label}: `; row.append(strong, document.createTextNode(value)); box.append(row); });
-  if (data.note) { const note = document.createElement("p"); note.className = "muted-text"; note.textContent = data.note; box.append(note); }
+  values.forEach(([label, value]) => {
+    const row = document.createElement("p");
+    const strong = document.createElement("strong");
+    strong.textContent = `${label}: `;
+    row.append(strong, document.createTextNode(value));
+    box.append(row);
+  });
+  if (data.note) {
+    const note = document.createElement("p");
+    note.className = "muted-text";
+    note.textContent = data.note;
+    box.append(note);
+  }
   $(".hero-actions")?.before(box);
 }
 
