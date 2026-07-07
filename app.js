@@ -2,6 +2,22 @@
   const JHD = window.JHD;
   if (!JHD) return;
 
+  const installHomeSearch = () => {
+    if (JHD.page() !== "index.html" || document.getElementById("homeSongSearch")) return;
+    const actions = document.querySelector(".hero .hero-actions");
+    if (!actions) return;
+
+    const form = document.createElement("form");
+    form.className = "home-discovery-search";
+    form.innerHTML = '<label for="homeSongSearch">Buscar un canto</label><input id="homeSongSearch" type="search" placeholder="Buscar por nombre, artista, tono o categoría..." autocomplete="off"><button class="song-btn" type="submit">Buscar</button>';
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const query = form.querySelector("input")?.value.trim() || "";
+      location.href = `canciones.html${query ? `?buscar=${encodeURIComponent(query)}` : ""}`;
+    });
+    actions.before(form);
+  };
+
   const renderGroups = (categories) => {
     const old = document.getElementById("homeFaithAccess");
     if (old) old.remove();
@@ -30,6 +46,7 @@
 
   JHD.loadHome = async () => {
     if (JHD.page() !== "index.html") return;
+    installHomeSearch();
     const songsBox = JHD.$("#homeSongsGrid");
     const artistsBox = JHD.$("#homeArtistsGrid");
     if (!JHD.sb) {
