@@ -1,0 +1,9 @@
+/* Visual hierarchy for song detail */
+.song-reader-shell{max-width:1040px;margin:auto;padding:32px;text-align:left}
+.song-reader-overview{display:grid;grid-template-columns:1fr auto;gap:18px;padding-bottom:22px;border-bottom:1px solid var(--border)}
+.song-reader-overview h2{margin:0;color:var(--text);font-size:2rem}.song-reader-overview p{margin:8px 0 0;color:var(--muted)}
+.song-reader-overview-actions{display:flex;gap:8px;align-items:flex-start}.song-reader-overview-actions .song-btn{width:auto;min-height:40px;margin:0;padding:8px 13px}
+.song-reader-toolbar{margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.018)}
+.song-lyrics-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:30px 0 0}.song-lyrics-heading h2{margin:0;color:var(--text)}
+.song-reader-shell .lyrics-block{margin-top:16px;padding:28px;border-radius:18px;background:#141821}
+@media(max-width:680px){.song-reader-shell{padding:20px}.song-reader-overview{grid-template-columns:1fr}.song-reader-overview-actions{justify-content:flex-start}.song-lyrics-heading{align-items:flex-start;flex-direction:column}}
