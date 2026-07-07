@@ -36,7 +36,7 @@ document.addEventListener("click", (event) => {
     hero.insertAdjacentElement("afterend", section);
   };
 
-  const recoverHome = async () => {
+  const recoverHome = () => {
     if (page() !== "index.html") return;
     const client = window.supabaseClient;
     const songsBox = document.getElementById("homeSongsGrid");
@@ -47,18 +47,20 @@ document.addEventListener("click", (event) => {
       renderGroups([]);
       return;
     }
-    const [songs, artists, categories] = await Promise.all([
-      wait(client.from("songs").select("id,title,slug,song_type,tone,difficulty").limit(6)),
-      wait(client.from("artists").select("id,name,slug,description").limit(6)),
-      wait(client.from("categories").select("id,name,slug,parent_id,song_type,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true }))
-    ]);
-    if (songs.error) notice(songsBox, "No se pudieron cargar las canciones", "Actualiza la página e inténtalo de nuevo.");
-    else if ((songs.data || []).length) songsBox.innerHTML = songs.data.map((song) => { const href = `cancion.html?slug=${encodeURIComponent(song.slug || "")}`; const meta = [song.song_type === "catolico" ? "Católico" : song.song_type === "cristiano" ? "Cristiano" : "General", song.tone ? `Tono ${song.tone}` : ""].filter(Boolean).join(" · "); return `<article class="song-card song-preview-card"><a class="song-preview-main" href="${href}"><h3>${esc(song.title || "Canción")}</h3><p>${esc(meta)}</p></a><div class="song-card-actions"><a class="song-btn small-btn" href="${href}">Ver canción</a></div></article>`; }).join("");
-    else notice(songsBox, "Sin canciones", "Aún no hay canciones publicadas.");
-    if (artists.error) notice(artistsBox, "No se pudieron cargar los artistas", "Actualiza la página e inténtalo de nuevo.");
-    else if ((artists.data || []).length) artistsBox.innerHTML = artists.data.map((artist) => { const name = artist.name || "Artista"; const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0] || "").join("").toUpperCase(); return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(artist.slug || "")}"><div class="artist-mini-avatar">${esc(initials)}</div><h3>${esc(name)}</h3><p>${esc(artist.description || "Ver canciones y álbumes.")}</p></a>`; }).join("");
-    else notice(artistsBox, "Sin artistas", "Aún no hay artistas publicados.");
-    renderGroups(categories.data || []);
+
+    wait(client.from("songs").select("id,title,slug,song_type,tone,difficulty").limit(6)).then((songs) => {
+      if (songs.error) notice(songsBox, "No se pudieron cargar las canciones", "Actualiza la página e inténtalo de nuevo.");
+      else if ((songs.data || []).length) songsBox.innerHTML = songs.data.map((song) => { const href = `cancion.html?slug=${encodeURIComponent(song.slug || "")}`; const meta = [song.song_type === "catolico" ? "Católico" : song.song_type === "cristiano" ? "Cristiano" : "General", song.tone ? `Tono ${song.tone}` : ""].filter(Boolean).join(" · "); return `<article class="song-card song-preview-card"><a class="song-preview-main" href="${href}"><h3>${esc(song.title || "Canción")}</h3><p>${esc(meta)}</p></a><div class="song-card-actions"><a class="song-btn small-btn" href="${href}">Ver canción</a></div></article>`; }).join("");
+      else notice(songsBox, "Sin canciones", "Aún no hay canciones publicadas.");
+    });
+
+    wait(client.from("artists").select("id,name,slug,description").limit(6)).then((artists) => {
+      if (artists.error) notice(artistsBox, "No se pudieron cargar los artistas", "Actualiza la página e inténtalo de nuevo.");
+      else if ((artists.data || []).length) artistsBox.innerHTML = artists.data.map((artist) => { const name = artist.name || "Artista"; const initials = name.split(/\s+/).slice(0, 2).map((word) => word[0] || "").join("").toUpperCase(); return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(artist.slug || "")}"><div class="artist-mini-avatar">${esc(initials)}</div><h3>${esc(name)}</h3><p>${esc(artist.description || "Ver canciones y álbumes.")}</p></a>`; }).join("");
+      else notice(artistsBox, "Sin artistas", "Aún no hay artistas publicados.");
+    });
+
+    wait(client.from("categories").select("id,name,slug,parent_id,song_type,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true })).then((categories) => renderGroups(categories.data || []));
   };
 
   document.addEventListener("DOMContentLoaded", recoverHome);
