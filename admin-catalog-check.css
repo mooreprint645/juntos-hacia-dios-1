@@ -1,0 +1,114 @@
+/* Revisión de salud del catálogo */
+.jhd-audit-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.jhd-audit-stat {
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--card);
+}
+
+.jhd-audit-stat strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--gold);
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.jhd-audit-stat span {
+  color: var(--muted);
+  font-size: .86rem;
+  font-weight: 760;
+}
+
+.jhd-audit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 20px;
+}
+
+.jhd-audit-toolbar p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.jhd-audit-list {
+  display: grid;
+  gap: 10px;
+}
+
+.jhd-audit-issue {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+}
+
+.jhd-audit-issue summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 850;
+}
+
+.jhd-audit-issue summary::-webkit-details-marker { display: none; }
+.jhd-audit-issue summary::after { content: "+"; margin-left: auto; color: var(--gold); font-size: 1.2rem; }
+.jhd-audit-issue[open] summary::after { content: "−"; }
+
+.jhd-audit-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  min-height: 25px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(246,196,83,.14);
+  color: var(--gold);
+  font-size: .78rem;
+}
+
+.jhd-audit-issue.is-warning .jhd-audit-badge { background: rgba(246,196,83,.14); color: var(--gold); }
+.jhd-audit-issue.is-critical .jhd-audit-badge { background: rgba(255,118,118,.14); color: #ffb4b4; }
+.jhd-audit-issue.is-info .jhd-audit-badge { background: rgba(142,190,255,.14); color: #a9cdfd; }
+
+.jhd-audit-detail {
+  padding: 0 16px 16px;
+  color: var(--muted);
+}
+
+.jhd-audit-detail p { margin: 0 0 10px; }
+.jhd-audit-detail ul { display: grid; gap: 5px; margin: 0; padding-left: 20px; }
+.jhd-audit-detail li { overflow-wrap: anywhere; }
+
+.jhd-audit-good {
+  padding: 22px;
+  border: 1px solid rgba(246,196,83,.28);
+  border-radius: 18px;
+  background: rgba(246,196,83,.07);
+  color: var(--text);
+}
+
+.jhd-audit-good strong { color: var(--gold); }
+
+@media (max-width: 880px) {
+  .jhd-audit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .jhd-audit-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .jhd-audit-stat { padding: 14px; }
+  .jhd-audit-toolbar { align-items: stretch; flex-direction: column; }
+  .jhd-audit-toolbar .song-btn { width: 100%; }
+}
