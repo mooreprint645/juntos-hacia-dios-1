@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Juntos Hacia Dios</title>
+  <desc id="desc">Cancionero cristiano y católico</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1117"/>
+      <stop offset="1" stop-color="#202532"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.18" cy="0.08" r="0.7">
+      <stop offset="0" stop-color="#f6c453" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#f6c453" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect x="82" y="82" width="104" height="104" rx="30" fill="#f6c453"/>
+  <path d="M134 104v23h-18v18h18v23h18v-23h18v-18h-18v-23z" fill="#17120a"/>
+  <text x="220" y="142" fill="#f6c453" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">Juntos Hacia Dios</text>
+  <text x="84" y="300" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="800">Cantos para orar,</text>
+  <text x="84" y="390" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="800">alabar y servir</text>
+  <text x="88" y="474" fill="#b9bdc9" font-family="Arial, Helvetica, sans-serif" font-size="32">Letras · acordes · tonos · artistas · categorías</text>
+  <line x1="84" y1="528" x2="1116" y2="528" stroke="#f6c453" stroke-opacity=".35"/>
+  <text x="84" y="575" fill="#f6c453" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700">Cancionero cristiano y católico</text>
+</svg>
