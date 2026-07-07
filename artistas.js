@@ -10,6 +10,7 @@ const norm = (value) => String(value || "").toLowerCase().normalize("NFD").repla
 const slugify = (value) => norm(value).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 const esc = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 const cleanDescription = (value) => String(value || "").replace(/<!--JHD_ARTIST_META:[\s\S]*?-->\s*$/, "").trim();
+const biography = (person) => cleanDescription(person?.bio || person?.description);
 
 function nav() {
   const button = document.querySelector("#menuToggle");
@@ -33,7 +34,7 @@ function typeLabel(person) {
 }
 function card(person) {
   const key = person.slug || slugify(person.name);
-  const description = cleanDescription(person.description);
+  const description = biography(person);
   return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(typeLabel(person))}</strong></p><p>${esc(description || "Artista o ministerio del cancionero.")}</p></a>`;
 }
 function mountFilters() {
@@ -55,7 +56,7 @@ function drawList() {
   if (!grid) return;
   const query = norm(input?.value);
   const list = people.filter((person) => {
-    const matchesSearch = !query || norm([person.name, cleanDescription(person.description), person.type, person.artist_type].join(" ")).includes(query);
+    const matchesSearch = !query || norm([person.name, biography(person), person.type, person.artist_type].join(" ")).includes(query);
     const matchesType = !activeType || artistGroup(person) === activeType;
     return matchesSearch && matchesType;
   });
@@ -69,7 +70,7 @@ function drawList() {
 }
 async function drawProfile(person) {
   if (!grid) return;
-  const description = cleanDescription(person.description);
+  const description = biography(person);
   document.title = `${person.name || "Artista"} | Juntos Hacia Dios`;
   const heroTitle = document.querySelector(".hero h1");
   const heroText = document.querySelector(".hero .hero-content > p:last-child");
