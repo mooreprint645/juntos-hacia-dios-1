@@ -9,6 +9,7 @@ let activeType = "";
 const norm = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 const slugify = (value) => norm(value).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 const esc = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+const cleanDescription = (value) => String(value || "").replace(/<!--JHD_ARTIST_META:[\s\S]*?-->\s*$/, "").trim();
 
 function nav() {
   const button = document.querySelector("#menuToggle");
@@ -32,7 +33,8 @@ function typeLabel(person) {
 }
 function card(person) {
   const key = person.slug || slugify(person.name);
-  return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(typeLabel(person))}</strong></p><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p></a>`;
+  const description = cleanDescription(person.description);
+  return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(key)}"><h3>${esc(person.name || "Ministerio")}</h3><p><strong>${esc(typeLabel(person))}</strong></p><p>${esc(description || "Artista o ministerio del cancionero.")}</p></a>`;
 }
 function mountFilters() {
   if (document.querySelector("#artistTypeFilters")) return;
@@ -53,7 +55,7 @@ function drawList() {
   if (!grid) return;
   const query = norm(input?.value);
   const list = people.filter((person) => {
-    const matchesSearch = !query || norm([person.name, person.description, person.type, person.artist_type].join(" ")).includes(query);
+    const matchesSearch = !query || norm([person.name, cleanDescription(person.description), person.type, person.artist_type].join(" ")).includes(query);
     const matchesType = !activeType || artistGroup(person) === activeType;
     return matchesSearch && matchesType;
   });
@@ -67,11 +69,12 @@ function drawList() {
 }
 async function drawProfile(person) {
   if (!grid) return;
+  const description = cleanDescription(person.description);
   document.title = `${person.name || "Artista"} | Juntos Hacia Dios`;
   const heroTitle = document.querySelector(".hero h1");
   const heroText = document.querySelector(".hero .hero-content > p:last-child");
   if (heroTitle) heroTitle.textContent = person.name || "Artista";
-  if (heroText) heroText.textContent = person.description || "Ministerio o artista del cancionero.";
+  if (heroText) heroText.textContent = description || "Ministerio o artista del cancionero.";
   input?.closest(".search-container")?.classList.add("hidden");
   document.querySelector("#artistTypeFilters")?.classList.add("hidden");
   const [songsRes, relationRes, albumsRes] = await Promise.all([
@@ -86,7 +89,7 @@ async function drawProfile(person) {
   const rows = songs.length ? songs.map((song) => `<a class="song-card song-link-card" href="cancion.html?id=${encodeURIComponent(song.id)}"><p class="artists-line">${esc(song.song_type || "Canción")}</p><h3>${esc(song.title || "Canción")}</h3><p>${esc(song.tone ? `Tono ${song.tone}` : "Ver letra y acordes")}</p></a>`).join("") : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay canciones relacionadas.</p></article>";
   const albumLinks = albums.length ? `<div class="song-filters">${albums.map((album) => `<a class="filter-btn" href="canciones.html?album=${encodeURIComponent(album.slug || album.title || "")}">${esc(album.title || "Álbum")}${album.year ? ` · ${esc(album.year)}` : ""}</a>`).join("")}</div>` : "";
   grid.className = "artists-grid";
-  grid.innerHTML = `<article class="intro-card"><div class="artist-mini-avatar">${esc(initials)}</div><h2>${esc(person.name || "Ministerio")}</h2><p>${esc(person.description || "Artista o ministerio del cancionero.")}</p><p class="muted-text">${songs.length} ${songs.length === 1 ? "canción" : "canciones"} relacionadas</p>${albumLinks}<a class="song-btn secondary" href="artistas.html">← Volver a artistas</a></article><div class="songs-grid">${rows}</div>`;
+  grid.innerHTML = `<article class="intro-card"><div class="artist-mini-avatar">${esc(initials)}</div><h2>${esc(person.name || "Ministerio")}</h2><p>${esc(description || "Artista o ministerio del cancionero.")}</p><p class="muted-text">${songs.length} ${songs.length === 1 ? "canción" : "canciones"} relacionadas</p>${albumLinks}<a class="song-btn secondary" href="artistas.html">← Volver a artistas</a></article><div class="songs-grid">${rows}</div>`;
 }
 async function start() {
   if (!db || !grid) return;
