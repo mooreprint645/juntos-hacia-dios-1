@@ -5,17 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Canciones | Juntos Hacia Dios</title>
   <meta name="description" content="Explora canciones cristianas y católicas con letras, acordes, tonos y recursos." />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="public-accessibility.css?v=1">
   <link rel="stylesheet" href="canciones.css?v=1" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=1"></script>
-  <script src="canciones.js?v=7" defer></script>
+  <script src="canciones.js?v=8" defer></script>
 </head>
 <body>
   <header>
     <nav class="navbar">
       <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
-      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
       <div class="nav-menu" id="navMenu">
         <a href="index.html">Inicio</a>
         <a href="canciones.html" class="active">Canciones</a>
@@ -23,7 +24,6 @@
         <a href="categorias.html">Categorías</a>
         <a href="albumes.html">Álbumes</a>
         <a href="donaciones.html">Donaciones</a>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
       </div>
     </nav>
   </header>
@@ -36,14 +36,19 @@
       </div>
     </section>
     <section class="section">
-      <div class="search-container"><input id="songSearch" type="search" placeholder="Buscar canción..." /></div>
-      <div class="song-filters">
-        <button class="filter-btn active" type="button" data-type="">Todas</button>
-        <button class="filter-btn" type="button" data-type="catolico">Católico</button>
-        <button class="filter-btn" type="button" data-type="cristiano">Cristiano</button>
-        <button class="filter-btn" type="button" data-type="mixto">Mixto</button>
+      <div class="search-container">
+        <label class="sr-only" for="songSearch">Buscar canción</label>
+        <input id="songSearch" type="search" placeholder="Buscar canción, artista, tono o categoría..." autocomplete="off" />
       </div>
+      <div class="song-filters" aria-label="Filtrar canciones por tipo">
+        <button class="filter-btn active" type="button" data-type="" aria-pressed="true">Todas</button>
+        <button class="filter-btn" type="button" data-type="catolico" aria-pressed="false">Católico</button>
+        <button class="filter-btn" type="button" data-type="cristiano" aria-pressed="false">Cristiano</button>
+        <button class="filter-btn" type="button" data-type="mixto" aria-pressed="false">Mixto</button>
+      </div>
+      <p class="catalog-results-status" id="songsResultsStatus" aria-live="polite"></p>
       <div class="songs-grid" id="songsGrid"><article class="song-card shimmer-card"><h3>Cargando canciones...</h3><p>Un momento por favor.</p></article></div>
+      <div class="catalog-load-more"><button class="song-btn secondary" id="songsLoadMore" type="button" hidden>Cargar más canciones</button></div>
     </section>
   </main>
   <footer>
