@@ -117,9 +117,13 @@
   }
 
   function boot() {
-    if (load()) return;
-    const observer = new MutationObserver(() => { if (load()) observer.disconnect(); });
+    let observer;
+    const attempt = () => {
+      load().then((done) => { if (done) observer?.disconnect(); });
+    };
+    observer = new MutationObserver(attempt);
     observer.observe(document.body, { childList: true, subtree: true });
+    attempt();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true }); else boot();
 })();
