@@ -74,6 +74,9 @@ async function loadRelations(songs) {
     client.from("song_categories").select("song_id,categories(id,name,song_type,slug)").in("song_id", ids),
     client.from("album_songs").select("song_id,albums(id,title,slug)").in("song_id", ids)
   ]);
+  const relationError = [artistRes, categoryRes, albumRes].find((result) => result.error)?.error;
+  if (relationError) throw relationError;
+
   const artistsBySong = new Map();
   const categoriesBySong = new Map();
   const albumsBySong = new Map();
@@ -231,7 +234,8 @@ function renderSongs() {
   });
 
   if (loadMoreButton) {
-    loadMoreButton.hidden = visibleSongs.length >= totalResults;
+    const hasMore = visibleSongs.length < totalResults;
+    loadMoreButton.hidden = !hasMore;
     loadMoreButton.disabled = loading;
     loadMoreButton.textContent = loading ? "Cargando…" : "Cargar más canciones";
   }
@@ -257,26 +261,40 @@ async function shareSong(title, url, button) {
   }
 }
 
+function beginFreshLoad() {
+  visibleSongs = [];
+  totalResults = 0;
+  page = 0;
+  if (songsGrid) songsGrid.innerHTML = "<article class='song-card shimmer-card'><h3>Buscando canciones…</h3><p>Un momento por favor.</p></article>";
+  setStatus("Buscando canciones…");
+  if (loadMoreButton) {
+    loadMoreButton.hidden = true;
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Cargar más canciones";
+  }
+}
+
 async function fetchSongs(append = false) {
-  if (!client || loading) return;
-  loading = true;
+  if (!client || (append && loading)) return;
   const token = ++requestVersion;
   const currentPage = append ? page + 1 : 0;
-  if (!append) {
-    visibleSongs = [];
-    totalResults = 0;
-    if (songsGrid) songsGrid.innerHTML = "<article class='song-card shimmer-card'><h3>Buscando canciones…</h3><p>Un momento por favor.</p></article>";
-    setStatus("Buscando canciones…");
+  loading = true;
+
+  if (!append) beginFreshLoad();
+  else if (loadMoreButton) {
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Cargando…";
   }
-  if (loadMoreButton) loadMoreButton.disabled = true;
 
   try {
     const ids = await resolveSongIds();
     if (token !== requestVersion) return;
+
     if (ids && !ids.size) {
       page = 0;
       visibleSongs = [];
       totalResults = 0;
+      loading = false;
       renderSongs();
       return;
     }
@@ -291,21 +309,28 @@ async function fetchSongs(append = false) {
 
     const hydrated = await loadRelations(data || []);
     if (token !== requestVersion) return;
+
     page = currentPage;
     totalResults = Number(count || 0);
     visibleSongs = append ? [...visibleSongs, ...hydrated] : hydrated;
+    loading = false;
     renderSongs();
   } catch (error) {
     if (token !== requestVersion) return;
     totalResults = 0;
     visibleSongs = [];
+    loading = false;
     if (songsGrid) songsGrid.innerHTML = `<article class='song-card'><h3>Error al cargar</h3><p>${escapeHTML(error?.message || "Revisa la conexión e inténtalo de nuevo.")}</p></article>`;
     setStatus("No se pudieron cargar las canciones.");
-    if (loadMoreButton) loadMoreButton.hidden = true;
+    if (loadMoreButton) {
+      loadMoreButton.hidden = true;
+      loadMoreButton.disabled = false;
+      loadMoreButton.textContent = "Cargar más canciones";
+    }
   } finally {
-    if (token === requestVersion) {
+    if (token === requestVersion && loading) {
       loading = false;
-      if (loadMoreButton) loadMoreButton.disabled = false;
+      renderSongs();
     }
   }
 }
