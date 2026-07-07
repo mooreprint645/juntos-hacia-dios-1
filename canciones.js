@@ -7,14 +7,6 @@ let albumParam = "";
 let allSongs = [];
 let activeType = "";
 
-function alignSongButtons() {
-  if (document.getElementById("jhdSongButtonAlignment")) return;
-  const style = document.createElement("style");
-  style.id = "jhdSongButtonAlignment";
-  style.textContent = `.songs-grid .song-card{display:flex;flex-direction:column}.songs-grid .song-card .song-btn{margin-top:auto;align-self:flex-start}@media(max-width:560px){.songs-grid .song-card .song-btn{align-self:stretch}}`;
-  document.head.append(style);
-}
-
 const escapeHTML = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 function initNavigation() {
   const menuButton = document.querySelector("#menuToggle");
@@ -114,6 +106,5 @@ filterButtons.forEach((button) => button.addEventListener("click", () => {
   renderSongs();
 }));
 window.addEventListener("popstate", () => { readRoute(); renderSongs(); });
-alignSongButtons();
 initNavigation();
 loadSongs();
