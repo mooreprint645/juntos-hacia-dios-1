@@ -10,6 +10,14 @@ var supabaseClient = supabase.createClient(
 window.supabaseClient = supabaseClient;
 
 (() => {
+  if (/(^|\/)admin\.html$/i.test(location.pathname)) return;
+  const script = document.createElement("script");
+  script.src = "site-footer-links.js?v=1";
+  script.async = true;
+  document.head.append(script);
+})();
+
+(() => {
   const isArtistProfile = () => /(^|\/)artista\.html$/i.test(location.pathname);
   if (!isArtistProfile()) return;
 
