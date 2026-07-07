@@ -20,6 +20,7 @@
   <script src="admin-song-category-picker.js?v=2" defer></script>
   <script src="admin-history.js?v=1" defer></script>
   <script src="admin-backup.js?v=1" defer></script>
+  <script src="admin-backup-import.js?v=1" defer></script>
 </head>
 <body>
   <header>
@@ -53,12 +54,27 @@
       </form>
       <p class="muted-text" id="adminLoginMessage"></p>
     </section>
-    <section id="adminWorkspace" class="admin-hidden" aria-live="polite"></section>
+    <section class="admin-panel" id="adminPanel" hidden>
+      <div class="admin-toolbar">
+        <div>
+          <p class="hero-kicker">Sesión activa</p>
+          <h2>Catálogo</h2>
+          <p class="muted-text" id="adminUserEmail"></p>
+        </div>
+        <button class="song-btn secondary" id="adminLogout" type="button">Cerrar sesión</button>
+      </div>
+      <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab active" data-admin-tab="songs" type="button">Canciones</button>
+        <button class="admin-tab" data-admin-tab="artists" type="button">Artistas</button>
+        <button class="admin-tab" data-admin-tab="categories" type="button">Categorías</button>
+        <button class="admin-tab" data-admin-tab="albums" type="button">Álbumes</button>
+        <button class="admin-tab" data-admin-tab="donations" type="button">Donaciones</button>
+      </div>
+      <div id="adminView"></div>
+    </section>
   </main>
-  <footer>
-    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
-    <p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p>
+  <footer class="site-footer">
+    <p>Juntos Hacia Dios</p>
   </footer>
-  <script>document.getElementById("year").textContent = new Date().getFullYear()</script>
 </body>
 </html>
