@@ -1,0 +1,145 @@
+/* Sistema unificado de tarjetas públicas */
+:root {
+  --public-card-radius: 20px;
+  --public-card-shadow: 0 10px 24px rgba(0, 0, 0, .16);
+  --public-card-hover-shadow: 0 16px 32px rgba(0, 0, 0, .22);
+}
+
+main:not(.admin-page) .song-card:not(.shimmer-card),
+main:not(.admin-page) .artist-card:not(.home-artist-card):not(.shimmer-card),
+main:not(.admin-page) .quick-card:not(.shimmer-card),
+main:not(.admin-page) .public-category-card,
+main:not(.admin-page) .artist-song-row,
+main:not(.admin-page) .artist-category-card,
+main:not(.admin-page) .artist-discovery-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--public-card-radius);
+  background: var(--card);
+  box-shadow: var(--public-card-shadow);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+main:not(.admin-page) .song-card:not(.shimmer-card)::before,
+main:not(.admin-page) .artist-card:not(.home-artist-card):not(.shimmer-card)::before,
+main:not(.admin-page) .quick-card:not(.shimmer-card)::before,
+main:not(.admin-page) .public-category-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(246, 196, 83, .7), rgba(246, 196, 83, 0));
+  opacity: .65;
+  pointer-events: none;
+}
+
+main:not(.admin-page) .song-card:not(.shimmer-card):hover,
+main:not(.admin-page) .artist-card:not(.home-artist-card):not(.shimmer-card):hover,
+main:not(.admin-page) .quick-card:not(.shimmer-card):hover,
+main:not(.admin-page) .public-category-card:hover,
+main:not(.admin-page) .artist-song-row:hover,
+main:not(.admin-page) .artist-category-card:hover,
+main:not(.admin-page) .artist-discovery-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(246, 196, 83, .42);
+  background: var(--card-soft);
+  box-shadow: var(--public-card-hover-shadow);
+}
+
+main:not(.admin-page) .song-preview-card {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
+}
+
+main:not(.admin-page) .song-preview-card .song-preview-main {
+  position: relative;
+  flex: 1;
+  padding-right: 38px;
+}
+
+main:not(.admin-page) .song-preview-card .song-preview-main::after {
+  content: "♫";
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border: 1px solid rgba(246, 196, 83, .2);
+  border-radius: 10px;
+  background: rgba(246, 196, 83, .08);
+  color: var(--gold);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+main:not(.admin-page) .song-preview-card .artists-line,
+main:not(.admin-page) .song-preview-card .song-preview-main > p:first-child {
+  color: var(--gold);
+  font-size: .81rem;
+  font-weight: 820;
+}
+
+main:not(.admin-page) .song-preview-card h3 {
+  color: var(--text);
+  line-height: 1.18;
+}
+
+main:not(.admin-page) .song-preview-card .song-card-actions,
+main:not(.admin-page) .public-category-card .public-category-card-actions {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid var(--border);
+}
+
+main:not(.admin-page) .artist-card:not(.home-artist-card) {
+  display: flex;
+  min-height: 172px;
+  flex-direction: column;
+  color: var(--text);
+  text-decoration: none;
+}
+
+main:not(.admin-page) .artist-card:not(.home-artist-card) h3,
+main:not(.admin-page) .public-category-card h3 {
+  color: var(--text);
+  line-height: 1.2;
+}
+
+main:not(.admin-page) .artist-card:not(.home-artist-card) p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+main:not(.admin-page) .quick-card {
+  min-height: 0;
+  text-decoration: none;
+}
+
+main:not(.admin-page) .artist-song-row,
+main:not(.admin-page) .artist-category-card,
+main:not(.admin-page) .artist-discovery-card {
+  box-shadow: none;
+}
+
+main:not(.admin-page) .artist-song-row:hover,
+main:not(.admin-page) .artist-category-card:hover,
+main:not(.admin-page) .artist-discovery-card:hover {
+  box-shadow: 0 9px 20px rgba(0, 0, 0, .14);
+}
+
+main:not(.admin-page) .home-access-group {
+  box-shadow: var(--public-card-shadow);
+}
+
+@media (max-width: 560px) {
+  main:not(.admin-page) .song-preview-card,
+  main:not(.admin-page) .artist-card:not(.home-artist-card) {
+    min-height: 0;
+  }
+}
