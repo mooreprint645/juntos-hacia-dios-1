@@ -10,11 +10,19 @@
   let recommendationsReady = false;
   let setupError = null;
   let opening = false;
-  const draft = { targetType: "category", query: "", targetId: "", sectionType: "catolico" };
+  const draft = { targetType: "category", typeFilter: "all", query: "", targetId: "", sectionType: "catolico" };
 
   const esc = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
   const normalize = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const typeLabel = (value) => ({ catolico: "Católico", cristiano: "Cristiano", mixto: "Mixto" }[normalize(value)] || "General");
+  const contentType = (value) => {
+    const type = normalize(value);
+    if (type.includes("catolic")) return "catolico";
+    if (type.includes("cristian")) return "cristiano";
+    if (type.includes("mixto")) return "mixto";
+    return "general";
+  };
+  const typeLabel = (type) => ({ catolico: "Católico", cristiano: "Cristiano", mixto: "Mixto", general: "General" }[type] || "General");
+  const sectionLabel = (section) => section === "cristiano" ? "Cristiana" : "Católica";
 
   function setTabActive(button) {
     const tabs = button?.closest(".admin-tabs");
@@ -22,72 +30,116 @@
   }
 
   function targetFor(type, id) {
-    if (type === "song") return songs.find((song) => String(song.id) === String(id)) || null;
-    return categories.find((category) => String(category.id) === String(id)) || null;
+    return (type === "song" ? songs : categories).find((item) => String(item.id) === String(id)) || null;
+  }
+
+  function sourceType(type, item) {
+    return contentType(type === "song" ? item?.song_type : item?.song_type);
   }
 
   function targetName(type, item) {
     if (!item) return "Contenido eliminado";
-    if (type === "song") return item.title || "Canto sin título";
-    return item.name || "Carpeta sin nombre";
+    return type === "song" ? (item.title || "Canto sin título") : (item.name || "Carpeta sin nombre");
   }
 
   function targetMeta(type, item) {
     if (!item) return "El elemento ya no existe.";
     if (type === "song") {
       const artists = artistNamesBySong.get(String(item.id)) || [];
-      return [artists.join(" · "), item.tone ? `Tono ${item.tone}` : "", typeLabel(item.song_type)].filter(Boolean).join(" · ") || "Canto";
+      return [artists.join(" · "), item.tone ? `Tono ${item.tone}` : "", "Canto"].filter(Boolean).join(" · ");
     }
-    return ["Carpeta", typeLabel(item.song_type), item.parent_id ? "Subcarpeta" : "Carpeta principal"].filter(Boolean).join(" · ");
+    return ["Carpeta", item.parent_id ? "Subcarpeta" : "Carpeta principal"].join(" · ");
+  }
+
+  function sectionFor(row, item) {
+    const type = sourceType(row.target_type, item);
+    return type === "catolico" || type === "cristiano" ? type : (row.section_type === "cristiano" ? "cristiano" : "catolico");
+  }
+
+  function draftSection() {
+    const item = targetFor(draft.targetType, draft.targetId);
+    const type = sourceType(draft.targetType, item);
+    return type === "catolico" || type === "cristiano" ? type : draft.sectionType;
+  }
+
+  function typeBadge(type) {
+    return `<span class="jhd-type-badge type-${type}">${typeLabel(type)}</span>`;
   }
 
   function candidates() {
     const source = draft.targetType === "song" ? songs : categories;
     const key = normalize(draft.query);
     return source.filter((item) => {
+      const type = sourceType(draft.targetType, item);
+      const typeMatches = draft.typeFilter === "all" || (draft.typeFilter === "mixto-general" ? (type === "mixto" || type === "general") : type === draft.typeFilter);
       const haystack = draft.targetType === "song"
         ? [item.title, item.tone, item.song_type, (artistNamesBySong.get(String(item.id)) || []).join(" ")].join(" ")
         : [item.name, item.song_type, item.description].join(" ");
-      return !key || normalize(haystack).includes(key);
+      return typeMatches && (!key || normalize(haystack).includes(key));
     }).slice(0, 18);
   }
 
-  function recRows(sectionType) {
-    const rows = recommendations
-      .filter((row) => row.section_type === sectionType)
-      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0));
-    if (!rows.length) return '<div class="jhd-home-section-empty">Aún no hay recomendaciones en esta columna.</div>';
-
-    return rows.map((row) => {
-      const item = targetFor(row.target_type, row.target_id);
-      const kind = row.target_type === "song" ? "♫" : "✝";
-      return `<div class="jhd-rec-row" data-rec-id="${esc(row.id)}"><input type="checkbox" data-rec-visible ${row.is_visible !== false ? "checked" : ""} aria-label="Mostrar ${esc(targetName(row.target_type, item))}"><span class="jhd-rec-kind" aria-hidden="true">${kind}</span><div class="jhd-rec-name"><strong>${esc(targetName(row.target_type, item))}</strong><small>${esc(targetMeta(row.target_type, item))}</small></div><select data-rec-section aria-label="Columna"><option value="catolico" ${row.section_type === "catolico" ? "selected" : ""}>Católica</option><option value="cristiano" ${row.section_type === "cristiano" ? "selected" : ""}>Cristiana</option></select><input type="number" min="0" inputmode="numeric" data-rec-order value="${esc(row.sort_order ?? 0)}" aria-label="Orden"><button class="jhd-rec-delete" type="button" data-delete-rec="${esc(row.id)}" aria-label="Quitar recomendación">×</button></div>`;
-    }).join("");
+  function duplicateRows() {
+    const map = new Map();
+    recommendations.forEach((row) => {
+      const key = `${row.target_type}:${row.target_id}`;
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    return map;
   }
 
-  function targetListHTML() {
-    const matches = candidates();
-    if (!matches.length) return '<div class="jhd-recommendation-empty">No encontramos resultados. Prueba otro nombre.</div>';
-    return matches.map((item) => {
-      const selected = String(item.id) === String(draft.targetId);
-      const icon = draft.targetType === "song" ? "♫" : "✝";
-      return `<button class="jhd-recommendation-target ${selected ? "is-selected" : ""}" type="button" data-target-id="${esc(item.id)}"><span class="jhd-recommendation-target-icon" aria-hidden="true">${icon}</span><span><strong>${esc(targetName(draft.targetType, item))}</strong><small>${esc(targetMeta(draft.targetType, item))}</small></span>${selected ? '<em>Seleccionado</em>' : ""}</button>`;
+  function rowsForSection(section) {
+    return recommendations
+      .map((row) => ({ row, item: targetFor(row.target_type, row.target_id) }))
+      .filter(({ row, item }) => sectionFor(row, item) === section)
+      .sort((a, b) => Number(a.row.sort_order || 0) - Number(b.row.sort_order || 0));
+  }
+
+  function recRows(section) {
+    const rows = rowsForSection(section);
+    const duplicates = duplicateRows();
+    if (!rows.length) return '<div class="jhd-home-section-empty">Aún no hay recomendaciones en esta columna.</div>';
+    return rows.map(({ row, item }) => {
+      const type = sourceType(row.target_type, item);
+      const manual = type === "mixto" || type === "general";
+      const duplicate = duplicates.get(`${row.target_type}:${row.target_id}`) > 1;
+      const placement = manual
+        ? `<label class="jhd-rec-control">Columna<select data-rec-section aria-label="Columna"><option value="catolico" ${row.section_type !== "cristiano" ? "selected" : ""}>Católica</option><option value="cristiano" ${row.section_type === "cristiano" ? "selected" : ""}>Cristiana</option></select></label>`
+        : `<span class="jhd-rec-placement">Va en ${sectionLabel(section)} automáticamente</span>`;
+      return `<article class="jhd-rec-card" data-rec-id="${esc(row.id)}"><div class="jhd-rec-card-main"><span class="jhd-rec-kind" aria-hidden="true">${row.target_type === "song" ? "♫" : "✝"}</span><div class="jhd-rec-name"><strong>${esc(targetName(row.target_type, item))}</strong><small>${esc(targetMeta(row.target_type, item))}</small><div class="jhd-rec-badges">${typeBadge(type)}${duplicate ? '<span class="jhd-rec-placement">Duplicado</span>' : ""}</div></div></div><div class="jhd-rec-actions"><label class="jhd-rec-control"><input type="checkbox" data-rec-visible ${row.is_visible !== false ? "checked" : ""}> Visible</label>${placement}<label class="jhd-rec-control">Orden<input type="number" min="0" inputmode="numeric" data-rec-order value="${esc(row.sort_order ?? 0)}"></label><button class="jhd-rec-delete" type="button" data-delete-rec="${esc(row.id)}" aria-label="Quitar recomendación">×</button></div></article>`;
     }).join("");
   }
 
   function renderTargetList() {
     const list = document.getElementById("jhdRecommendationTargets");
-    const selected = document.getElementById("jhdSelectedRecommendation");
+    const placement = document.getElementById("jhdSelectedRecommendation");
+    const sectionSelect = document.getElementById("jhdRecommendationSection");
     if (list) {
-      list.innerHTML = targetListHTML();
+      const matches = candidates();
+      list.innerHTML = matches.length ? matches.map((item) => {
+        const selected = String(item.id) === String(draft.targetId);
+        const type = sourceType(draft.targetType, item);
+        return `<button class="jhd-recommendation-target ${selected ? "is-selected" : ""}" type="button" data-target-id="${esc(item.id)}"><span class="jhd-recommendation-target-icon" aria-hidden="true">${draft.targetType === "song" ? "♫" : "✝"}</span><span><strong>${esc(targetName(draft.targetType, item))}</strong><small>${esc(targetMeta(draft.targetType, item))}</small></span>${typeBadge(type)}${selected ? '<em>Seleccionado</em>' : ""}</button>`;
+      }).join("") : '<div class="jhd-recommendation-empty">No encontramos resultados con ese tipo o búsqueda.</div>';
       list.querySelectorAll("[data-target-id]").forEach((button) => button.addEventListener("click", () => {
         draft.targetId = button.dataset.targetId || "";
+        const item = targetFor(draft.targetType, draft.targetId);
+        const type = sourceType(draft.targetType, item);
+        if (type === "catolico" || type === "cristiano") draft.sectionType = type;
         renderTargetList();
       }));
     }
-    if (selected) {
-      const item = targetFor(draft.targetType, draft.targetId);
-      selected.textContent = item ? `Seleccionado: ${targetName(draft.targetType, item)}` : "Selecciona una opción de la lista.";
+    const item = targetFor(draft.targetType, draft.targetId);
+    const type = sourceType(draft.targetType, item);
+    const forced = type === "catolico" || type === "cristiano";
+    if (sectionSelect) {
+      sectionSelect.disabled = forced;
+      sectionSelect.value = forced ? type : draft.sectionType;
+    }
+    if (placement) {
+      placement.innerHTML = item
+        ? `<strong>${esc(targetName(draft.targetType, item))}</strong> · ${typeBadge(type)} · se publicará en <strong>${sectionLabel(draftSection())}</strong>${forced ? " automáticamente" : ""}.`
+        : "Selecciona una carpeta o un canto de la lista.";
     }
   }
 
@@ -98,11 +150,16 @@
     document.getElementById("jhdRetryHomeRecommendations")?.addEventListener("click", open);
   }
 
+  function recommendationColumn(section, title, copy) {
+    const rows = rowsForSection(section);
+    return `<article class="jhd-rec-column is-${section}"><div class="jhd-rec-column-heading"><div><h3><span aria-hidden="true">✝</span>${title}</h3><p>${copy}</p></div><span class="jhd-rec-column-count">${rows.length} ${rows.length === 1 ? "elemento" : "elementos"}</span></div><div class="jhd-home-section-list">${recRows(section)}</div></article>`;
+  }
+
   function render() {
     if (!recommendationsReady) return renderSetup();
     const view = document.getElementById("adminView");
     if (!view) return;
-    view.innerHTML = `<section class="admin-section"><div class="admin-section-heading"><div><p class="hero-kicker">Página principal</p><h2>Recomendaciones de Inicio</h2></div><p class="admin-count">Hasta 8 visibles por columna</p></div><p class="jhd-home-section-note">Elige cualquier carpeta o cualquier canto del catálogo. Decide en qué columna se verá, ajusta el orden y oculta lo que no quieras mostrar. Las dos columnas de Inicio usan una cruz.</p><div class="jhd-recommendation-builder"><label>Recomendar<select id="jhdRecommendationType"><option value="category" ${draft.targetType === "category" ? "selected" : ""}>Carpeta o categoría</option><option value="song" ${draft.targetType === "song" ? "selected" : ""}>Canto</option></select></label><label>Buscar<input id="jhdRecommendationSearch" type="search" placeholder="Escribe para buscar..." value="${esc(draft.query)}" autocomplete="off"></label><label>Columna<select id="jhdRecommendationSection"><option value="catolico" ${draft.sectionType === "catolico" ? "selected" : ""}>Católica</option><option value="cristiano" ${draft.sectionType === "cristiano" ? "selected" : ""}>Cristiana</option></select></label><button class="song-btn" id="jhdAddRecommendation" type="button">Agregar</button><div class="jhd-recommendation-targets" id="jhdRecommendationTargets"></div><p class="jhd-home-section-status" id="jhdSelectedRecommendation"></p></div><div class="jhd-home-section-groups"><article class="jhd-home-section-group"><h3><span aria-hidden="true">✝</span>Católica</h3><p>Misa, tiempos litúrgicos y devociones.</p><div class="jhd-home-section-list">${recRows("catolico")}</div></article><article class="jhd-home-section-group"><h3><span aria-hidden="true">✝</span>Cristiana</h3><p>Alabanza, oración y ministerios.</p><div class="jhd-home-section-list">${recRows("cristiano")}</div></article></div><div class="jhd-home-section-actions"><button class="song-btn" id="jhdSaveHomeRecommendations" type="button">Guardar orden y visibilidad</button><button class="song-btn small-btn secondary" id="jhdReloadHomeRecommendations" type="button">Actualizar lista</button><p class="jhd-home-section-status" id="jhdHomeSectionStatus" aria-live="polite"></p></div></section>`;
+    view.innerHTML = `<section class="admin-section"><div class="admin-section-heading"><div><p class="hero-kicker">Página principal</p><h2>Recomendaciones de Inicio</h2></div><p class="admin-count">Hasta 8 visibles por columna</p></div><p class="jhd-home-section-note">Los elementos <strong>Católicos</strong> y <strong>Cristianos</strong> se colocan automáticamente en su columna. Solo el contenido mixto o general puede elegir dónde aparecer.</p><div class="jhd-recommendation-builder"><div class="jhd-builder-heading"><span class="jhd-builder-step">1</span><div><strong>Agregar recomendación</strong><small>Busca cualquier carpeta o canto. El tipo real siempre se muestra antes de agregarlo.</small></div></div><div class="jhd-builder-fields"><label>Contenido<select id="jhdRecommendationType"><option value="category" ${draft.targetType === "category" ? "selected" : ""}>Carpeta o categoría</option><option value="song" ${draft.targetType === "song" ? "selected" : ""}>Canto</option></select></label><label>Tipo real<select id="jhdRecommendationTypeFilter"><option value="all" ${draft.typeFilter === "all" ? "selected" : ""}>Todos los tipos</option><option value="catolico" ${draft.typeFilter === "catolico" ? "selected" : ""}>Católicos</option><option value="cristiano" ${draft.typeFilter === "cristiano" ? "selected" : ""}>Cristianos</option><option value="mixto-general" ${draft.typeFilter === "mixto-general" ? "selected" : ""}>Mixtos y generales</option></select></label><label>Buscar<input id="jhdRecommendationSearch" type="search" placeholder="Nombre, artista o tono..." value="${esc(draft.query)}" autocomplete="off"></label><label>Columna de Inicio<select id="jhdRecommendationSection"><option value="catolico">Católica</option><option value="cristiano">Cristiana</option></select></label></div><div class="jhd-recommendation-targets" id="jhdRecommendationTargets"></div><div class="jhd-builder-footer"><p class="jhd-builder-selection" id="jhdSelectedRecommendation"></p><button class="song-btn" id="jhdAddRecommendation" type="button">Agregar a Inicio</button></div></div><div class="jhd-home-section-groups">${recommendationColumn("catolico", "Columna Católica", "Misa, tiempos litúrgicos y devociones.")}${recommendationColumn("cristiano", "Columna Cristiana", "Alabanza, oración y ministerios.")}</div><div class="jhd-home-section-actions"><button class="song-btn" id="jhdSaveHomeRecommendations" type="button">Guardar cambios</button><button class="song-btn small-btn secondary" id="jhdReloadHomeRecommendations" type="button">Actualizar lista</button><p class="jhd-home-section-status" id="jhdHomeSectionStatus" aria-live="polite"></p></div></section>`;
 
     renderTargetList();
     document.getElementById("jhdRecommendationType")?.addEventListener("change", (event) => {
@@ -110,6 +167,11 @@
       draft.query = "";
       draft.targetId = "";
       render();
+    });
+    document.getElementById("jhdRecommendationTypeFilter")?.addEventListener("change", (event) => {
+      draft.typeFilter = event.target.value || "all";
+      draft.targetId = "";
+      renderTargetList();
     });
     document.getElementById("jhdRecommendationSearch")?.addEventListener("input", (event) => {
       draft.query = event.target.value;
@@ -136,7 +198,7 @@
       db.from("categories").select("id,name,description,parent_id,song_type,sort_order").order("name", { ascending: true }),
       db.from("songs").select("id,title,slug,tone,song_type").order("title", { ascending: true }),
       db.from("song_artists").select("song_id,artists(name)"),
-      db.from("home_recommendations").select("id,target_type,target_id,section_type,sort_order,is_visible").order("section_type", { ascending: true }).order("sort_order", { ascending: true })
+      db.from("home_recommendations").select("id,target_type,target_id,section_type,sort_order,is_visible").order("sort_order", { ascending: true })
     ]);
     const coreError = [categoriesRes, songsRes, artistLinksRes].find((result) => result.error)?.error;
     if (coreError) throw coreError;
@@ -161,66 +223,59 @@
     setTabActive(button);
     const view = document.getElementById("adminView");
     if (view) view.innerHTML = '<section class="admin-section"><div class="admin-empty">Cargando recomendaciones…</div></section>';
-    try {
-      await load();
-      render();
-    } catch (error) {
-      if (view) view.innerHTML = `<section class="admin-section"><div class="admin-empty">No se pudo cargar este control: ${esc(error?.message || "Error desconocido.")}</div></section>`;
-    } finally {
-      opening = false;
-    }
+    try { await load(); render(); }
+    catch (error) { if (view) view.innerHTML = `<section class="admin-section"><div class="admin-empty">No se pudo cargar este control: ${esc(error?.message || "Error desconocido.")}</div></section>`; }
+    finally { opening = false; }
   }
 
   async function addRecommendation() {
     const item = targetFor(draft.targetType, draft.targetId);
-    if (!item) { setStatus("Primero selecciona una carpeta o un canto de la lista.", true); return; }
-    const duplicate = recommendations.some((row) => row.target_type === draft.targetType && String(row.target_id) === String(item.id) && row.section_type === draft.sectionType);
-    if (duplicate) { setStatus("Ese elemento ya está recomendado en esta columna.", true); return; }
-    const current = recommendations.filter((row) => row.section_type === draft.sectionType);
-    const nextOrder = current.length ? Math.max(...current.map((row) => Number(row.sort_order || 0))) + 1 : 0;
+    if (!item) return setStatus("Primero selecciona una carpeta o un canto de la lista.", true);
+    const duplicate = recommendations.some((row) => row.target_type === draft.targetType && String(row.target_id) === String(item.id));
+    if (duplicate) return setStatus("Ese elemento ya está recomendado. Revísalo en su columna antes de agregarlo otra vez.", true);
+    const section = draftSection();
+    const current = rowsForSection(section);
+    const nextOrder = current.length ? Math.max(...current.map(({ row }) => Number(row.sort_order || 0))) + 1 : 0;
     const button = document.getElementById("jhdAddRecommendation");
     if (button) button.disabled = true;
     setStatus("Agregando recomendación…");
     try {
-      const { error } = await db.from("home_recommendations").insert([{ target_type: draft.targetType, target_id: item.id, section_type: draft.sectionType, sort_order: nextOrder, is_visible: true }]);
+      const { error } = await db.from("home_recommendations").insert([{ target_type: draft.targetType, target_id: item.id, section_type: section, sort_order: nextOrder, is_visible: true }]);
       if (error) throw error;
       draft.query = "";
       draft.targetId = "";
       await load();
       render();
-      setStatus("Recomendación agregada.");
-    } catch (error) {
-      setStatus(`No se pudo agregar: ${error?.message || "Error desconocido."}`, true);
-    } finally {
-      if (button) button.disabled = false;
-    }
+      setStatus("Recomendación agregada correctamente.");
+    } catch (error) { setStatus(`No se pudo agregar: ${error?.message || "Error desconocido."}`, true); }
+    finally { if (button) button.disabled = false; }
   }
 
   async function saveRecommendations() {
-    const rows = [...document.querySelectorAll("[data-rec-id]")];
+    const cards = [...document.querySelectorAll("[data-rec-id]")];
     const button = document.getElementById("jhdSaveHomeRecommendations");
     if (button) button.disabled = true;
-    setStatus("Guardando orden y visibilidad…");
+    setStatus("Guardando cambios…");
     try {
-      const writes = rows.map((row) => {
-        const id = row.dataset.recId;
-        return db.from("home_recommendations").update({
-          section_type: row.querySelector("[data-rec-section]")?.value || "catolico",
-          sort_order: Math.max(0, Number(row.querySelector("[data-rec-order]")?.value || 0)),
-          is_visible: Boolean(row.querySelector("[data-rec-visible]")?.checked)
-        }).eq("id", id);
+      const writes = cards.map((card) => {
+        const row = recommendations.find((item) => String(item.id) === String(card.dataset.recId));
+        const target = row && targetFor(row.target_type, row.target_id);
+        const type = row ? sourceType(row.target_type, target) : "general";
+        const data = {
+          sort_order: Math.max(0, Number(card.querySelector("[data-rec-order]")?.value || 0)),
+          is_visible: Boolean(card.querySelector("[data-rec-visible]")?.checked)
+        };
+        if (type === "mixto" || type === "general") data.section_type = card.querySelector("[data-rec-section]")?.value || row.section_type || "catolico";
+        return db.from("home_recommendations").update(data).eq("id", row.id);
       });
       const results = await Promise.all(writes);
       const error = results.find((result) => result.error)?.error;
       if (error) throw error;
       await load();
       render();
-      setStatus("Cambios guardados. Recarga Inicio para verlos.");
-    } catch (error) {
-      setStatus(`No se pudieron guardar: ${error?.message || "Error desconocido."}`, true);
-    } finally {
-      if (button) button.disabled = false;
-    }
+      setStatus("Cambios guardados. Inicio ya separará los tipos correctamente.");
+    } catch (error) { setStatus(`No se pudieron guardar: ${error?.message || "Error desconocido."}`, true); }
+    finally { if (button) button.disabled = false; }
   }
 
   async function deleteRecommendation(id) {
@@ -232,9 +287,7 @@
       await load();
       render();
       setStatus("Recomendación quitada.");
-    } catch (error) {
-      setStatus(`No se pudo quitar: ${error?.message || "Error desconocido."}`, true);
-    }
+    } catch (error) { setStatus(`No se pudo quitar: ${error?.message || "Error desconocido."}`, true); }
   }
 
   function install() {
