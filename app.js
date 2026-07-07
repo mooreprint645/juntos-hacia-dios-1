@@ -8,18 +8,21 @@ document.addEventListener("click", (event) => {
 
 (() => {
   const setHomeCrosses = () => {
-    document.querySelectorAll(".home-access-group").forEach((group) => {
+    const groups = [...document.querySelectorAll(".home-access-group")];
+    groups.forEach((group) => {
       const title = group.querySelector("h3")?.textContent?.trim();
-      if (title === "Católico" || title === "Cristiano") {
-        const icon = group.querySelector(".home-access-symbol");
-        if (icon) icon.textContent = "✝";
-      }
+      if (title !== "Católico" && title !== "Cristiano") return;
+      const icon = group.querySelector(".home-access-symbol");
+      if (icon && icon.textContent.trim() !== "✝") icon.textContent = "✝";
     });
+    return groups.length >= 2;
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    const observer = new MutationObserver(setHomeCrosses);
+    const observer = new MutationObserver(() => {
+      if (setHomeCrosses()) observer.disconnect();
+    });
     observer.observe(document.body, { childList: true, subtree: true });
-    setHomeCrosses();
+    if (setHomeCrosses()) observer.disconnect();
   });
 })();
