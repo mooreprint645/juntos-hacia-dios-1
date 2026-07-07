@@ -13,7 +13,7 @@ window.supabaseClient = supabaseClient;
   const isArtistProfile = () => /(^|\/)artista\.html$/i.test(location.pathname);
   if (!isArtistProfile()) return;
 
-  ["artist-profile-fields.js?v=1", "artist-discovery.js?v=1"].forEach((src) => {
+  ["artist-profile-fields.js?v=1", "artist-discovery.js?v=2"].forEach((src) => {
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
