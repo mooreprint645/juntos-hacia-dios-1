@@ -1,1 +1,27 @@
 .admin-filter-row{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;grid-template-columns:none}.admin-filter-row>input[type="search"]{flex:1 1 100%;min-width:0;order:-1}.admin-filter-row>select{flex:1 1 180px;min-width:0;width:auto}.admin-filter-row>input[type="search"]::placeholder{color:var(--muted);opacity:1}@media(max-width:920px){.admin-filter-row>select{flex-basis:100%}}
+
+#songAdminForm .jhd-song-category-native{display:none!important}
+#songAdminForm .jhd-song-folder-picker{display:grid;gap:10px;width:100%;margin-top:8px}
+#songAdminForm .jhd-scp-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border);border-radius:15px;background:var(--card-soft)}
+#songAdminForm .jhd-scp-summary>div{min-width:0;flex:1}
+#songAdminForm .jhd-scp-summary small{display:block;margin-bottom:3px;color:var(--muted);font-size:.78rem}
+#songAdminForm .jhd-scp-summary strong{display:block;color:var(--gold);font-size:.92rem;line-height:1.35;overflow-wrap:anywhere}
+#songAdminForm .jhd-scp-summary .song-btn{width:auto;margin:0;flex:0 0 auto}
+#songAdminForm .jhd-scp-panel{display:grid;gap:10px;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--card-soft)}
+#songAdminForm .jhd-scp-text{margin:0;color:var(--muted);font-size:.87rem}
+#songAdminForm .jhd-scp-text strong{color:var(--gold)}
+#songAdminForm .jhd-scp-types{display:grid;gap:8px}
+#songAdminForm .jhd-scp-types button{min-height:46px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);padding:11px 12px;text-align:left;font:inherit;font-weight:800;cursor:pointer}
+#songAdminForm .jhd-scp-tools{display:flex;align-items:center;gap:8px}
+#songAdminForm .jhd-scp-tools .song-btn{width:auto;margin:0}
+#songAdminForm .jhd-scp-tools input{min-width:0;flex:1}
+#songAdminForm .jhd-scp-list{display:grid;gap:8px;max-height:280px;overflow:auto;padding-right:2px}
+#songAdminForm .jhd-scp-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center;gap:8px;padding:10px 11px;border:1px solid var(--border);border-radius:13px;background:var(--card)!important}
+#songAdminForm .jhd-scp-open{display:block!important;width:100%!important;min-width:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--text)!important;padding:0!important;margin:0!important;text-align:left!important;font:inherit!important;font-weight:800!important;cursor:pointer}
+#songAdminForm .jhd-scp-open strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#songAdminForm .jhd-scp-open small{display:block;margin-top:3px;color:var(--muted);font-size:.78rem}
+#songAdminForm .jhd-scp-use{appearance:none!important;-webkit-appearance:none!important;border:0!important;border-radius:10px!important;background:var(--gold)!important;color:#1c1b18!important;padding:8px 11px!important;margin:0!important;font:inherit!important;font-size:.8rem!important;font-weight:900!important;line-height:1.1!important;cursor:pointer!important;white-space:nowrap}
+#songAdminForm .jhd-scp-panel>.song-btn{margin:0;width:auto;justify-self:start}
+#songAdminForm .jhd-song-category-grid{grid-template-columns:1fr!important;gap:14px}
+#songAdminForm .jhd-song-category-grid>label{min-width:0}
+@media(max-width:620px){#songAdminForm .jhd-scp-summary{align-items:flex-start;flex-wrap:wrap}#songAdminForm .jhd-scp-summary .song-btn{width:100%;margin:0}#songAdminForm .jhd-scp-tools{align-items:stretch;flex-wrap:wrap}#songAdminForm .jhd-scp-tools .song-btn{width:100%}#songAdminForm .jhd-scp-row{padding:10px}#songAdminForm .jhd-scp-use{padding:9px 10px!important}}
