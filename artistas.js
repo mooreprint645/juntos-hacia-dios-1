@@ -3,11 +3,17 @@ const grid = document.querySelector("#artistsGrid");
 const input = document.querySelector("#artistSearch");
 const params = new URLSearchParams(location.search);
 const selectedKey = params.get("slug") || params.get("id") || "";
-let people = [];
+const PAGE_SIZE = 24;
+
 let activeType = "";
+let page = 0;
+let totalResults = 0;
+let visibleArtists = [];
+let loading = false;
+let requestVersion = 0;
+let searchTimer = 0;
 
 const norm = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const slugify = (value) => norm(value).replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
 const esc = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 const cleanDescription = (value) => String(value || "").replace(/<!--JHD_ARTIST_META:[\s\S]*?-->\s*$/, "").trim();
 const biography = (person) => cleanDescription(person?.bio || person?.description);
@@ -43,10 +49,31 @@ function typeLabel(person) {
 }
 
 function card(person) {
-  const key = person.slug || slugify(person.name);
+  const key = person.slug || person.id;
   const description = biography(person) || "Explora sus cantos, álbumes y colaboraciones.";
   const count = Number(person.song_count || 0);
   return `<a class="artist-card catalog-artist-card" href="artista.html?slug=${encodeURIComponent(key)}" aria-label="Ver perfil de ${esc(person.name || "Ministerio")}"><div class="catalog-card-heading"><span class="catalog-avatar" aria-hidden="true">${esc(initials(person.name))}</span><div><p class="catalog-card-kicker">${esc(typeLabel(person))}</p><h3>${esc(person.name || "Ministerio")}</h3></div><span class="catalog-card-arrow" aria-hidden="true">→</span></div><p class="catalog-card-description">${esc(description)}</p><div class="catalog-card-footer"><span class="catalog-card-count"><span aria-hidden="true">♫</span> ${esc(countLabel(count))}</span><strong>Ver perfil →</strong></div></a>`;
+}
+
+function ensureLoadMore() {
+  let button = document.querySelector("#artistsLoadMore");
+  if (button || !grid) return button;
+  const wrap = document.createElement("div");
+  wrap.className = "catalog-load-more";
+  wrap.innerHTML = '<button class="song-btn secondary" id="artistsLoadMore" type="button" hidden>Cargar más artistas</button>';
+  grid.after(wrap);
+  button = wrap.querySelector("#artistsLoadMore");
+  button.addEventListener("click", () => fetchArtists(true));
+  return button;
+}
+
+function updateLoadMore() {
+  const button = ensureLoadMore();
+  if (!button) return;
+  const hasMore = visibleArtists.length < totalResults;
+  button.hidden = !hasMore;
+  button.disabled = loading;
+  button.textContent = loading ? "Cargando…" : "Cargar más artistas";
 }
 
 function mountFilters() {
@@ -57,7 +84,7 @@ function mountFilters() {
   filters.id = "artistTypeFilters";
   filters.className = "song-filters";
   filters.setAttribute("aria-label", "Filtrar artistas por tipo");
-  filters.innerHTML = `<button class="filter-btn active" type="button" data-artist-type="" aria-pressed="true">Todas</button><button class="filter-btn" type="button" data-artist-type="catolico" aria-pressed="false">Católicos</button><button class="filter-btn" type="button" data-artist-type="cristiano" aria-pressed="false">Cristianos</button>`;
+  filters.innerHTML = '<button class="filter-btn active" type="button" data-artist-type="" aria-pressed="true">Todas</button><button class="filter-btn" type="button" data-artist-type="catolico" aria-pressed="false">Católicos</button><button class="filter-btn" type="button" data-artist-type="cristiano" aria-pressed="false">Cristianos</button>';
   searchBox.after(filters);
   filters.querySelectorAll("[data-artist-type]").forEach((button) => button.addEventListener("click", () => {
     activeType = button.dataset.artistType || "";
@@ -66,105 +93,105 @@ function mountFilters() {
       item.classList.toggle("active", selected);
       item.setAttribute("aria-pressed", String(selected));
     });
-    drawList();
+    fetchArtists(false);
   }));
 }
 
-function drawList() {
-  if (!grid) return;
-  const query = norm(input?.value);
-  const list = people.filter((person) => {
-    const matchesSearch = !query || norm([person.name, biography(person), person.type, person.artist_type].join(" ")).includes(query);
-    const matchesType = !activeType || artistGroup(person) === activeType;
-    return matchesSearch && matchesType;
-  });
-  grid.className = "artists-grid";
+function setStatus(message) {
   const status = document.querySelector("#artistResultsStatus");
-  if (status) status.textContent = `${list.length} ${list.length === 1 ? "artista encontrado" : "artistas encontrados"}`;
-  grid.innerHTML = list.length
-    ? list.map(card).join("")
-    : `<article class="artist-card"><h3>Sin resultados</h3><p>${activeType ? "No hay artistas de este tipo que coincidan con la búsqueda." : "Prueba con otro nombre."}</p></article>`;
+  if (status) status.textContent = message;
 }
 
-async function drawProfile(person) {
+function renderArtists() {
   if (!grid) return;
-  const description = biography(person);
-  document.title = `${person.name || "Artista"} | Juntos Hacia Dios`;
-  const heroTitle = document.querySelector(".hero h1");
-  const heroText = document.querySelector(".hero .hero-content > p:last-child");
-  if (heroTitle) heroTitle.textContent = person.name || "Artista";
-  if (heroText) heroText.textContent = description || "Ministerio o artista del cancionero.";
-  input?.closest(".search-container")?.classList.add("hidden");
-  document.querySelector("#artistTypeFilters")?.classList.add("hidden");
-
+  setStatus(`${totalResults} ${totalResults === 1 ? "artista encontrado" : "artistas encontrados"}`);
   grid.className = "artists-grid";
-  grid.innerHTML = "<article class='artist-card shimmer-card'><h3>Cargando perfil…</h3><p>Un momento por favor.</p></article>";
-
-  const [relationsRes, albumsRes] = await Promise.all([
-    db.from("song_artists").select("song_id").eq("artist_id", person.id),
-    db.from("albums").select("*").eq("artist_id", person.id).order("title", { ascending: true })
-  ]);
-  const relationError = relationsRes.error || albumsRes.error;
-  if (relationError) {
-    grid.innerHTML = `<article class='artist-card'><h3>No se pudo cargar el perfil</h3><p>${esc(relationError.message)}</p></article>`;
-    return;
-  }
-
-  const songIds = [...new Set((relationsRes.data || []).map((row) => row.song_id).filter(Boolean))];
-  const songsRes = songIds.length
-    ? await db.from("songs").select("id,title,slug,tone,song_type").in("id", songIds).order("title", { ascending: true })
-    : { data: [], error: null };
-  if (songsRes.error) {
-    grid.innerHTML = `<article class='artist-card'><h3>No se pudieron cargar las canciones</h3><p>${esc(songsRes.error.message)}</p></article>`;
-    return;
-  }
-
-  const songs = songsRes.data || [];
-  const albums = albumsRes.data || [];
-  const rows = songs.length
-    ? songs.map((song) => `<a class="song-card song-link-card" href="cancion.html?id=${encodeURIComponent(song.id)}"><p class="artists-line">${esc(song.song_type || "Canción")}</p><h3>${esc(song.title || "Canción")}</h3><p>${esc(song.tone ? `Tono ${song.tone}` : "Ver letra y acordes")}</p></a>`).join("")
-    : "<article class='song-card'><h3>Sin canciones</h3><p>Aún no hay canciones relacionadas.</p></article>";
-  const albumLinks = albums.length
-    ? `<div class="song-filters">${albums.map((album) => `<a class="filter-btn" href="canciones.html?album=${encodeURIComponent(album.slug || album.title || "")}">${esc(album.title || "Álbum")}${album.year ? ` · ${esc(album.year)}` : ""}</a>`).join("")}</div>`
-    : "";
-
-  grid.innerHTML = `<article class="intro-card"><div class="artist-mini-avatar">${esc(initials(person.name))}</div><h2>${esc(person.name || "Ministerio")}</h2><p>${esc(description || "Artista o ministerio del cancionero.")}</p><p class="muted-text">${songs.length} ${songs.length === 1 ? "canción" : "canciones"} relacionadas</p>${albumLinks}<a class="song-btn secondary" href="artistas.html">← Volver a artistas</a></article><div class="songs-grid">${rows}</div>`;
+  grid.innerHTML = visibleArtists.length
+    ? visibleArtists.map(card).join("")
+    : '<article class="artist-card"><h3>Sin resultados</h3><p>Prueba con otro nombre o tipo de artista.</p></article>';
+  updateLoadMore();
 }
 
-async function start() {
-  if (!db || !grid) return;
-  mountFilters();
-  const [artistRes, relationRes] = await Promise.all([
-    db.from("artists").select("*").order("name", { ascending: true }),
-    db.from("song_artists").select("artist_id,song_id")
-  ]);
-  if (artistRes.error) {
-    grid.innerHTML = "<article class='artist-card'><h3>Error al cargar</h3><p>Revisa la conexión con Supabase.</p></article>";
-    return;
+function beginFreshLoad() {
+  page = 0;
+  totalResults = 0;
+  visibleArtists = [];
+  if (grid) grid.innerHTML = '<article class="artist-card shimmer-card"><h3>Buscando artistas…</h3><p>Un momento por favor.</p></article>';
+  setStatus("Buscando artistas…");
+  const button = ensureLoadMore();
+  if (button) {
+    button.hidden = true;
+    button.disabled = true;
+    button.textContent = "Cargar más artistas";
   }
+}
 
-  const songCountByArtist = new Map();
-  if (!relationRes.error) {
-    (relationRes.data || []).forEach((row) => {
-      const artistId = String(row.artist_id || "");
-      if (!artistId || !row.song_id) return;
-      if (!songCountByArtist.has(artistId)) songCountByArtist.set(artistId, new Set());
-      songCountByArtist.get(artistId).add(String(row.song_id));
+function rpcErrorMessage(error) {
+  const detail = String(error?.message || "");
+  if (error?.code === "PGRST202" || /search_artists_catalog/i.test(detail)) {
+    return "Falta activar la búsqueda escalable de artistas. Ejecuta supabase-artists-scale.sql en Supabase.";
+  }
+  return detail || "Revisa la conexión e inténtalo de nuevo.";
+}
+
+async function fetchArtists(append = false) {
+  if (!db || (append && loading)) return;
+  const token = ++requestVersion;
+  const currentPage = append ? page + 1 : 0;
+  loading = true;
+  if (!append) beginFreshLoad();
+  else updateLoadMore();
+
+  try {
+    const { data, error } = await db.rpc("search_artists_catalog", {
+      p_query: String(input?.value || "").trim() || null,
+      p_artist_type: activeType || null,
+      p_limit: PAGE_SIZE,
+      p_offset: currentPage * PAGE_SIZE
     });
+    if (error) throw error;
+    if (token !== requestVersion) return;
+
+    const rows = data || [];
+    const serverTotal = rows.length ? Number(rows[0].total_count || 0) : 0;
+    page = currentPage;
+    totalResults = append ? (rows.length ? serverTotal : visibleArtists.length) : serverTotal;
+    visibleArtists = append ? [...visibleArtists, ...rows] : rows;
+    loading = false;
+    renderArtists();
+  } catch (error) {
+    if (token !== requestVersion) return;
+    totalResults = 0;
+    visibleArtists = [];
+    loading = false;
+    if (grid) grid.innerHTML = `<article class="artist-card"><h3>Error al cargar</h3><p>${esc(rpcErrorMessage(error))}</p></article>`;
+    setStatus("No se pudieron cargar los artistas.");
+    const button = ensureLoadMore();
+    if (button) button.hidden = true;
+  } finally {
+    if (token === requestVersion && loading) {
+      loading = false;
+      renderArtists();
+    }
   }
-  people = (artistRes.data || []).map((person) => ({ ...person, song_count: songCountByArtist.get(String(person.id))?.size || 0 }));
-  const chosen = people.find((person) => String(person.id) === selectedKey || norm(person.slug) === norm(selectedKey) || slugify(person.name) === norm(selectedKey));
-  if (selectedKey && chosen) {
-    await drawProfile(chosen);
-    return;
-  }
-  if (selectedKey && !chosen) {
-    grid.innerHTML = "<article class='artist-card'><h3>Artista no encontrado</h3><p>Vuelve al listado e intenta nuevamente.</p></article>";
-    return;
-  }
-  drawList();
 }
 
-input?.addEventListener("input", drawList);
+function start() {
+  if (!db || !grid) return;
+  if (selectedKey) {
+    const key = params.get("id") ? `id=${encodeURIComponent(selectedKey)}` : `slug=${encodeURIComponent(selectedKey)}`;
+    location.replace(`artista.html?${key}`);
+    return;
+  }
+  mountFilters();
+  ensureLoadMore();
+  fetchArtists(false);
+}
+
+input?.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => fetchArtists(false), 260);
+});
+
 nav();
 start();
