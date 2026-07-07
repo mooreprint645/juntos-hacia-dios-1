@@ -2,10 +2,17 @@
   const JHD = window.JHD;
   if (!JHD || JHD.page() !== "index.html") return;
 
-  const CACHE_KEY = "jhd-home-search-index-v1";
+  const CACHE_KEY = "jhd-home-search-index-v2";
   const CACHE_MAX_AGE = 10 * 60 * 1000;
   const normalize = (value) => JHD.normalize(value);
   const esc = (value) => JHD.esc(value);
+  const cleanDescription = (value) => String(value || "").replace(/<!--JHD_ARTIST_META:[\s\S]*?-->\s*$/, "").trim();
+
+  JHD.artistCard = (artist) => {
+    const initials = String(artist.name || "JHD").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
+    const description = cleanDescription(artist.description);
+    return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(artist.slug || JHD.slugify(artist.name))}"><div class="artist-mini-avatar">${esc(initials)}</div><h3>${esc(artist.name || "Artista")}</h3><p>${esc(description || `${JHD.typeLabel(artist.artist_type)} · Ver canciones y álbumes.`)}</p></a>`;
+  };
 
   const readCache = () => {
     try {
@@ -46,13 +53,16 @@
     });
 
     const data = {
-      artists: artists.map((artist) => ({
-        id: artist.id,
-        name: artist.name || "",
-        slug: artist.slug || "",
-        description: artist.description || "",
-        search: normalize([artist.name, artist.slug, artist.description].join(" "))
-      })),
+      artists: artists.map((artist) => {
+        const description = cleanDescription(artist.description);
+        return {
+          id: artist.id,
+          name: artist.name || "",
+          slug: artist.slug || "",
+          description,
+          search: normalize([artist.name, artist.slug, description].join(" "))
+        };
+      }),
       songs: songs.map((song) => {
         const artistNames = artistNamesBySong.get(String(song.id)) || [];
         return {
