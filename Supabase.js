@@ -1,6 +1,6 @@
 const SUPABASE_URL = "https://bmtgfbtoyxwrrnygsqcj.supabase.co";
 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtdGdmYnRveXh3cnJueWdzcWNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjQwMTQsImV4cCI6MjA5ODAwMDAxNH0.7RF-h7yqT6gn-rQvtTDOVtxqn_vlVYlwAIusb1wPuLA";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtdGdmYnRveXh3cnJunezqcjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MjQwMTQsImV4cCI6MjA5ODAwMDAxNH0.7RF-h7yqT6gn-rQvtTDOVtxqn_vlVYlwAIusb1wPuLA";
 
 var supabaseClient = supabase.createClient(
   SUPABASE_URL,
@@ -13,10 +13,12 @@ window.supabaseClient = supabaseClient;
   const isArtistProfile = () => /(^|\/)artista\.html$/i.test(location.pathname);
   if (!isArtistProfile()) return;
 
-  const discoveryScript = document.createElement("script");
-  discoveryScript.src = "artist-discovery.js?v=1";
-  discoveryScript.async = true;
-  document.head.append(discoveryScript);
+  ["artist-profile-fields.js?v=1", "artist-discovery.js?v=1"].forEach((src) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    document.head.append(script);
+  });
 
   const addStyle = () => {
     if (document.getElementById("artistShareProfileStyle")) return;
