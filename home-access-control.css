@@ -1,1 +1,10 @@
 .home-search-result-icon.home-search-artist-initials{font-size:.7rem;letter-spacing:.03em}
+
+#homeFaithAccess .home-access-grid > :nth-child(n+9){display:none}
+
+#homeFaithAccess .home-access-featured-song{
+  border-color:rgba(246,196,83,.22);
+  background:linear-gradient(145deg,rgba(246,196,83,.11),rgba(255,255,255,.02));
+}
+
+#homeFaithAccess .home-access-featured-song small{color:var(--gold)}
