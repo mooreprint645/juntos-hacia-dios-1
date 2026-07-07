@@ -3,14 +3,8 @@
   const db = window.supabaseClient;
   if (!db) return;
 
-  const META_PATTERN = /<!--JHD_HOME_ACCESS:([\s\S]*?)-->\s*$/;
   const esc = (value) => String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
   const normalize = (value) => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const metaFor = (category) => {
-    const match = String(category?.description || "").match(META_PATTERN);
-    if (!match) return {};
-    try { return JSON.parse(match[1]) || {}; } catch (_) { return {}; }
-  };
 
   function rootsForType(categories, type) {
     const typed = (categories || []).filter((category) => normalize(category.song_type) === type);
@@ -20,16 +14,7 @@
       const children = typed.filter((category) => String(category.parent_id) === String(roots[0].id));
       if (children.length) roots = children;
     }
-    return roots
-      .filter((category) => metaFor(category).visible !== false)
-      .sort((a, b) => {
-        const orderA = Number(metaFor(a).order);
-        const orderB = Number(metaFor(b).order);
-        const hasA = Number.isFinite(orderA);
-        const hasB = Number.isFinite(orderB);
-        if (hasA || hasB) return (hasA ? orderA : 99999) - (hasB ? orderB : 99999) || String(a.name || "").localeCompare(String(b.name || ""), "es");
-        return Number(a.sort_order || 0) - Number(b.sort_order || 0) || String(a.name || "").localeCompare(String(b.name || ""), "es");
-      });
+    return roots.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || String(a.name || "").localeCompare(String(b.name || ""), "es"));
   }
 
   function descendants(categoryId, categories) {
@@ -48,17 +33,27 @@
     return ids;
   }
 
-  function renderGroup(type, title, description, categories, links) {
-    const countSongs = (categoryId) => {
-      const ids = descendants(categoryId, categories);
-      return new Set((links || []).filter((row) => ids.has(String(row.category_id))).map((row) => String(row.song_id))).size;
-    };
-    const cards = rootsForType(categories, type).slice(0, 8).map((category) => {
-      const count = countSongs(category.id);
-      const key = category.slug || category.id;
-      return `<a class="home-access-card" href="categorias.html?tipo=${type}&carpeta=${encodeURIComponent(key)}"><strong>${esc(category.name || "Categoría")}</strong><small>${count} ${count === 1 ? "canto" : "cantos"}</small></a>`;
-    }).join("");
-    return `<article class="home-access-group"><div class="home-access-group-heading"><span class="home-access-symbol" aria-hidden="true">✝</span><div><h3>${title}</h3><p>${description}</p></div></div>${cards ? `<div class="home-access-grid">${cards}</div>` : '<p class="home-access-empty">Las categorías aparecerán aquí cuando se agreguen.</p>'}<div class="home-access-footer"><a class="text-link" href="categorias.html?tipo=${type}">Ver todas</a></div></article>`;
+  function groupShell(title, description, cards) {
+    return `<article class="home-access-group"><div class="home-access-group-heading"><span class="home-access-symbol" aria-hidden="true">✝</span><div><h3>${title}</h3><p>${description}</p></div></div>${cards ? `<div class="home-access-grid">${cards}</div>` : '<p class="home-access-empty">Aún no hay recomendaciones en esta columna.</p>'}<div class="home-access-footer"><a class="text-link" href="categorias.html?tipo=${title === "Católico" ? "catolico" : "cristiano"}">Ver todas</a></div></article>`;
+  }
+
+  function categoryCard(category, categories, links, manual = false) {
+    const ids = descendants(category.id, categories);
+    const count = new Set((links || []).filter((row) => ids.has(String(row.category_id))).map((row) => String(row.song_id))).size;
+    const key = category.slug || category.id;
+    return `<a class="home-access-card ${manual ? "home-access-featured-category" : ""}" href="categorias.html?categoria=${encodeURIComponent(key)}"><strong>${esc(category.name || "Carpeta")}</strong><small>${manual ? "✝ Carpeta" : ""}${manual ? " · " : ""}${count} ${count === 1 ? "canto" : "cantos"}</small></a>`;
+  }
+
+  function songCard(song, artistNames = []) {
+    const href = song.slug ? `cancion.html?slug=${encodeURIComponent(song.slug)}` : `cancion.html?id=${encodeURIComponent(song.id)}`;
+    const meta = [artistNames.join(" · "), song.tone ? `Tono ${song.tone}` : ""].filter(Boolean).join(" · ");
+    return `<a class="home-access-card home-access-featured-song" href="${href}"><strong>${esc(song.title || "Canto")}</strong><small>♫ Canto${meta ? ` · ${esc(meta)}` : ""}</small></a>`;
+  }
+
+  function renderAutomatic(section, categories, links) {
+    const catholicCards = rootsForType(categories, "catolico").slice(0, 8).map((category) => categoryCard(category, categories, links)).join("");
+    const christianCards = rootsForType(categories, "cristiano").slice(0, 8).map((category) => categoryCard(category, categories, links)).join("");
+    section.querySelector(".home-access-groups").innerHTML = `${groupShell("Católico", "Misa, tiempos litúrgicos y devociones.", catholicCards)}${groupShell("Cristiano", "Alabanza, oración y ministerios.", christianCards)}`;
   }
 
   function improveArtistSearchResults() {
@@ -78,23 +73,67 @@
 
   async function refreshSection() {
     const section = document.getElementById("homeFaithAccess");
-    if (!section) return false;
-    const [categoriesRes, linksRes] = await Promise.all([
-      db.from("categories").select("id,name,slug,description,parent_id,song_type,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true }),
-      db.from("song_categories").select("song_id,category_id")
-    ]);
-    if (categoriesRes.error || linksRes.error) return true;
-    const groups = section.querySelector(".home-access-groups");
-    if (!groups) return true;
-    groups.innerHTML = `${renderGroup("catolico", "Católico", "Misa, tiempos litúrgicos y devociones.", categoriesRes.data || [], linksRes.data || [])}${renderGroup("cristiano", "Cristiano", "Alabanza, oración y ministerios.", categoriesRes.data || [], linksRes.data || [])}`;
-    section.dataset.homeAccessConfigured = "true";
-    return true;
+    if (!section || section.dataset.homeAccessLoading === "true") return false;
+    section.dataset.homeAccessLoading = "true";
+
+    try {
+      const [categoriesRes, linksRes, songsRes, artistLinksRes, recommendationsRes] = await Promise.all([
+        db.from("categories").select("id,name,slug,parent_id,song_type,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true }),
+        db.from("song_categories").select("song_id,category_id"),
+        db.from("songs").select("id,title,slug,tone,song_type").order("title", { ascending: true }),
+        db.from("song_artists").select("song_id,artists(name)"),
+        db.from("home_recommendations").select("id,target_type,target_id,section_type,sort_order,is_visible").order("sort_order", { ascending: true })
+      ]);
+
+      if (categoriesRes.error || linksRes.error) return true;
+      const categories = categoriesRes.data || [];
+      const links = linksRes.data || [];
+      const groups = section.querySelector(".home-access-groups");
+      if (!groups) return true;
+
+      if (recommendationsRes.error || !(recommendationsRes.data || []).length) {
+        renderAutomatic(section, categories, links);
+        section.dataset.homeAccessConfigured = "automatic";
+        return true;
+      }
+
+      const songById = new Map((songsRes.data || []).map((song) => [String(song.id), song]));
+      const categoryById = new Map(categories.map((category) => [String(category.id), category]));
+      const artistNamesBySong = new Map();
+      (artistLinksRes.data || []).forEach((row) => {
+        const id = String(row.song_id || "");
+        if (!row.artists?.name) return;
+        if (!artistNamesBySong.has(id)) artistNamesBySong.set(id, []);
+        artistNamesBySong.get(id).push(row.artists.name);
+      });
+
+      const entriesFor = (type) => (recommendationsRes.data || [])
+        .filter((entry) => entry.section_type === type && entry.is_visible !== false)
+        .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))
+        .map((entry) => {
+          if (entry.target_type === "song") {
+            const song = songById.get(String(entry.target_id));
+            return song ? songCard(song, artistNamesBySong.get(String(song.id)) || []) : "";
+          }
+          const category = categoryById.get(String(entry.target_id));
+          return category ? categoryCard(category, categories, links, true) : "";
+        })
+        .filter(Boolean)
+        .join("");
+
+      groups.innerHTML = `${groupShell("Católico", "Misa, tiempos litúrgicos y devociones.", entriesFor("catolico"))}${groupShell("Cristiano", "Alabanza, oración y ministerios.", entriesFor("cristiano"))}`;
+      section.dataset.homeAccessConfigured = "manual";
+      return true;
+    } finally {
+      delete section.dataset.homeAccessLoading;
+    }
   }
 
   function boot() {
     const observer = new MutationObserver(() => {
       improveArtistSearchResults();
-      if (document.getElementById("homeFaithAccess")?.dataset.homeAccessConfigured !== "true") refreshSection();
+      const section = document.getElementById("homeFaithAccess");
+      if (section && !section.dataset.homeAccessConfigured) refreshSection();
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
     improveArtistSearchResults();
