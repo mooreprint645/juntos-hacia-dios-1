@@ -104,8 +104,15 @@
       const raw = String(value || '');
       const match = raw.match(META_PATTERN);
       let links = {};
-      if(match){ try { const meta = JSON.parse(match[1]); links = meta?.links && typeof meta.links === 'object' ? meta.links : {}; } catch(_) {} }
-      return { description: raw.replace(META_PATTERN,'').trim(), links };
+      let featuredSongIds = [];
+      if(match){
+        try {
+          const meta = JSON.parse(match[1]);
+          links = meta?.links && typeof meta.links === 'object' ? meta.links : {};
+          featuredSongIds = Array.isArray(meta?.featuredSongIds) ? meta.featuredSongIds.map(String) : [];
+        } catch(_) {}
+      }
+      return { description: raw.replace(META_PATTERN,'').trim(), links, featuredSongIds };
     }
     function socialLinksHTML(links){
       const platforms = [
@@ -175,7 +182,10 @@
       if(songsResult.error || relationsResult.error || albumsResult.error || categoriesResult.error){ box.innerHTML = empty('No se pudo completar el perfil del artista.'); return; }
 
       const songs = sortSongs(songsResult.data || []);
-      const featuredSongs = songs.slice(0,3);
+      const songsById = new Map(songs.map((song) => [String(song.id), song]));
+      const selectedFeatured = (profile.featuredSongIds || []).map((id) => songsById.get(String(id))).filter(Boolean);
+      const featuredSongs = selectedFeatured.length ? selectedFeatured : songs.slice(0,3);
+      const featuredDescription = selectedFeatured.length ? 'Selección elegida desde el perfil del artista.' : 'Las más recientes que se han agregado a este perfil.';
       const firstEight = songs.slice(0,8);
       const remainingSongs = songs.slice(8);
       const relationsBySong = new Map();
@@ -225,7 +235,7 @@
           <p class="artist-filter-status" id="artistSongFilterStatus">Explora los cantos por tono o categoría.</p>
         </section>
         <section class="artist-profile-section" id="destacadasArtista">
-          <div class="artist-profile-section-header"><div><p class="hero-kicker">Para comenzar</p><h2>Canciones destacadas</h2><p>Las más recientes que se han agregado a este perfil.</p></div></div>
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Para comenzar</p><h2>Canciones destacadas</h2><p>${esc(featuredDescription)}</p></div></div>
           <div class="artist-song-list">${featuredSongs.length ? featuredSongs.map((song) => songRow(song, categoriesBySong)).join('') : empty('Este artista aún no tiene cantos publicados.')}</div>
         </section>
         <section class="artist-profile-section" id="cancionesArtista">
