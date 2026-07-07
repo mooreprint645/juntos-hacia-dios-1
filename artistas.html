@@ -1,1 +1,36 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Artistas | Juntos Hacia Dios</title><meta name="description" content="Explora artistas, ministerios y colaboradores del cancionero."><link rel="stylesheet" href="style.css?v=4"><link rel="stylesheet" href="detalles.css?v=1"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="Supabase.js?v=1"></script><script src="artistas.js?v=7" defer></script></head><body><header><nav class="navbar"><a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button><div class="nav-menu" id="navMenu"><a href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a class="active" href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="albumes.html">Álbumes</a><a href="donaciones.html">Donaciones</a><button class="theme-toggle" id="themeToggle" type="button">🌙</button></div></nav></header><main><section class="hero"><div class="hero-content"><p class="hero-kicker">Ministerios</p><h1>Artistas</h1><p>Encuentra ministerios, salmistas y colaboradores dentro del cancionero.</p></div></section><section class="section"><div class="search-container"><input id="artistSearch" type="search" placeholder="Buscar artista o ministerio..."></div><div class="artists-grid" id="artistsGrid"><article class="artist-card shimmer-card"><h3>Cargando artistas...</h3><p>Un momento por favor.</p></article></div></section></main><footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="categorias.html">Categorías</a> · <a href="albumes.html">Álbumes</a></p></footer><script>document.getElementById("year").textContent=new Date().getFullYear()</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Artistas | Juntos Hacia Dios</title>
+  <meta name="description" content="Explora artistas, ministerios y colaboradores del cancionero.">
+  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="public-accessibility.css?v=1">
+  <link rel="stylesheet" href="detalles.css?v=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=1"></script>
+  <script src="artistas.js?v=8" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a class="active" href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="albumes.html">Álbumes</a><a href="donaciones.html">Donaciones</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="hero"><div class="hero-content"><p class="hero-kicker">Ministerios</p><h1>Artistas</h1><p>Encuentra ministerios, salmistas y colaboradores dentro del cancionero.</p></div></section>
+    <section class="section">
+      <div class="search-container"><label class="sr-only" for="artistSearch">Buscar artista o ministerio</label><input id="artistSearch" type="search" placeholder="Buscar artista o ministerio..." autocomplete="off"></div>
+      <p class="catalog-results-status" id="artistResultsStatus" aria-live="polite"></p>
+      <div class="artists-grid" id="artistsGrid"><article class="artist-card shimmer-card"><h3>Cargando artistas...</h3><p>Un momento por favor.</p></article></div>
+    </section>
+  </main>
+  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="categorias.html">Categorías</a> · <a href="albumes.html">Álbumes</a></p></footer>
+  <script>document.getElementById("year").textContent=new Date().getFullYear()</script>
+</body>
+</html>
