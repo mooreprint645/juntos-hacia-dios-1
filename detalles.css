@@ -96,6 +96,28 @@
   .song-reader-toolbar #transposeBox { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
   .song-reader-toolbar #transposeStatus { grid-column: 1 / -1; order: -1; min-width: 0; }
   .song-reader-toolbar #transposeBox .song-btn { width: 100%; }
-  .song-reader-toolbar #capoControls { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .song-reader-toolbar #capoControls .filter-btn { width: 100%; text-align: center; }
+  .song-reader-toolbar #capoControls {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 2px 1px 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .song-reader-toolbar #capoControls::-webkit-scrollbar { display: none; }
+  .song-reader-toolbar #capoControls .filter-btn {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 42px;
+    margin: 0;
+    padding: 9px 13px;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+  }
 }
