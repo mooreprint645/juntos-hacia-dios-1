@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Canción | Juntos Hacia Dios</title>
   <meta name="description" content="Detalle de canción con letra, tono, acordes y recursos.">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="public-accessibility.css?v=1">
   <link rel="stylesheet" href="detalles.css?v=4">
   <link rel="stylesheet" href="song-reading-mode.css?v=1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=1"></script>
-  <script src="cancion.js?v=6" defer></script>
+  <script src="cancion.js?v=7" defer></script>
   <script src="song-reading-mode.js?v=1" defer></script>
 </head>
 <body>
   <header>
     <nav class="navbar">
       <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
-      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
       <div class="nav-menu" id="navMenu">
         <a href="index.html">Inicio</a>
         <a class="active" href="canciones.html">Canciones</a>
@@ -25,7 +26,6 @@
         <a href="categorias.html">Categorías</a>
         <a href="albumes.html">Álbumes</a>
         <a href="donaciones.html">Donaciones</a>
-        <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
       </div>
     </nav>
   </header>
@@ -44,6 +44,10 @@
         <div id="songLyrics" class="lyrics muted-text">Cargando letra...</div>
         <div id="songLinks" class="quick-cards" hidden></div>
       </article>
+    </section>
+    <section class="section related-songs-section" id="relatedSongsSection" hidden>
+      <div class="section-heading split-heading"><div><p class="hero-kicker">Sigue explorando</p><h2>Cantos relacionados</h2></div><a class="text-link" href="canciones.html">Ver canciones</a></div>
+      <div class="songs-grid" id="relatedSongsGrid"></div>
     </section>
   </main>
   <footer>
