@@ -13,6 +13,11 @@ window.supabaseClient = supabaseClient;
   const isArtistProfile = () => /(^|\/)artista\.html$/i.test(location.pathname);
   if (!isArtistProfile()) return;
 
+  const discoveryScript = document.createElement("script");
+  discoveryScript.src = "artist-discovery.js?v=1";
+  discoveryScript.async = true;
+  document.head.append(discoveryScript);
+
   const addStyle = () => {
     if (document.getElementById("artistShareProfileStyle")) return;
     const style = document.createElement("style");
