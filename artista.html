@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Artista | Juntos Hacia Dios</title>
+  <meta name="description" content="Perfil de artista o ministerio con canciones, álbumes y colaboraciones.">
+  <meta name="theme-color" content="#0f1117">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="site-shell.css?v=1">
+  <link rel="stylesheet" href="public-cards.css?v=1">
+  <link rel="stylesheet" href="artist-layout.css?v=1">
+  <link rel="stylesheet" href="artist-discovery.css?v=1">
+  <link rel="stylesheet" href="public-accessibility.css?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=1"></script>
+  <script src="artist-page.js?v=1" defer></script>
+</head>
+<body class="artist-profile-page">
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a>
+        <a href="canciones.html">Canciones</a>
+        <a class="active" href="artistas.html">Artistas</a>
+        <a href="categorias.html">Categorías</a>
+        <a href="albumes.html">Álbumes</a>
+        <a href="donaciones.html">Donaciones</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="section song-page-section">
+      <div id="artistProfile" aria-live="polite">
+        <article class="artist-hero-card shimmer-card">
+          <div class="artist-avatar-public">…</div>
+          <div><p class="hero-kicker">Cargando artista</p><h1>Un momento por favor</h1><p>Estamos preparando su perfil.</p></div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
+    <p><a href="artistas.html">Artistas</a> · <a href="canciones.html">Canciones</a> · <a href="categorias.html">Categorías</a></p>
+  </footer>
+</body>
+</html>
