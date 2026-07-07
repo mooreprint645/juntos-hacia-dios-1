@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# El panel de administración se protege por autenticación.
+Disallow: /admin.html
