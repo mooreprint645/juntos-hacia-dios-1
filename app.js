@@ -9,11 +9,38 @@
 
     const form = document.createElement("form");
     form.className = "home-discovery-search";
-    form.innerHTML = '<label for="homeSongSearch">Buscar un canto</label><input id="homeSongSearch" type="search" placeholder="Buscar por nombre, artista, tono o categoría..." autocomplete="off"><button class="song-btn" type="submit">Buscar</button>';
-    form.addEventListener("submit", (event) => {
+    form.innerHTML = '<label for="homeSongSearch">Buscar un canto o artista</label><input id="homeSongSearch" type="search" placeholder="Buscar canción, artista, tono o categoría..." autocomplete="off"><button class="song-btn" type="submit">Buscar</button>';
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const query = form.querySelector("input")?.value.trim() || "";
-      location.href = `canciones.html${query ? `?buscar=${encodeURIComponent(query)}` : ""}`;
+      const input = form.querySelector("input");
+      const button = form.querySelector("button");
+      const query = input?.value.trim() || "";
+      if (!query) {
+        location.href = "canciones.html";
+        return;
+      }
+
+      const normalizedQuery = JHD.normalize(query);
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Buscando...";
+
+      try {
+        const result = await JHD.sb?.from("artists").select("id,name,slug").order("name", { ascending: true });
+        const artists = result?.data || [];
+        const exactArtist = artists.find((artist) => JHD.normalize(artist.name) === normalizedQuery || JHD.normalize(artist.slug) === normalizedQuery);
+        const similarArtists = artists.filter((artist) => JHD.normalize(artist.name).includes(normalizedQuery));
+        const artist = exactArtist || (similarArtists.length === 1 ? similarArtists[0] : null);
+
+        if (artist) {
+          location.href = `artista.html?slug=${encodeURIComponent(artist.slug || JHD.slugify(artist.name))}`;
+          return;
+        }
+      } catch (_) {
+        // Si la consulta de artistas falla, se mantiene la búsqueda por canciones.
+      }
+
+      location.href = `canciones.html?buscar=${encodeURIComponent(query)}`;
     });
     actions.before(form);
   };
