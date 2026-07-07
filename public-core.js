@@ -58,16 +58,76 @@ JHD.fetchSongsWithRelations = async (ids) => {
 JHD.artistNames = (song) => (song?._artists || []).map((artist) => artist.name).filter(Boolean).join(" · ") || "Sin artista";
 JHD.categoryNames = (song) => (song?._categories || []).map((category) => category.name).filter(Boolean).join(" · ");
 JHD.songMeta = (song) => [JHD.typeLabel(song.song_type || song.type), song.tone ? `Tono ${song.tone}` : "", song.difficulty || ""].filter(Boolean).join(" · ");
-JHD.songCard = (song) => `<a class="song-card song-link-card" href="cancion.html?slug=${encodeURIComponent(song.slug || JHD.slugify(song.title))}"><p class="artists-line">${JHD.esc(JHD.artistNames(song))}</p><h3>${JHD.esc(song.title || "Canción sin título")}</h3><p>${JHD.esc(JHD.songMeta(song))}${JHD.categoryNames(song) ? ` · ${JHD.esc(JHD.categoryNames(song))}` : ""}</p></a>`;
+JHD.songCard = (song) => {
+  const href = `cancion.html?slug=${encodeURIComponent(song.slug || JHD.slugify(song.title))}`;
+  const title = song.title || "Canción sin título";
+  return `<article class="song-card song-preview-card"><a class="song-preview-main" href="${href}"><p class="artists-line">${JHD.esc(JHD.artistNames(song))}</p><h3>${JHD.esc(title)}</h3><p>${JHD.esc(JHD.songMeta(song))}${JHD.categoryNames(song) ? ` · ${JHD.esc(JHD.categoryNames(song))}` : ""}</p></a><div class="song-card-actions"><a class="song-btn small-btn" href="${href}">Ver canción</a><button class="song-btn small-btn secondary" type="button" data-share-song="${JHD.esc(href)}" data-share-title="${JHD.esc(title)}">Compartir</button></div></article>`;
+};
 JHD.artistCard = (artist) => {
   const initials = String(artist.name || "JHD").split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
   return `<a class="artist-card" href="artista.html?slug=${encodeURIComponent(artist.slug || JHD.slugify(artist.name))}"><div class="artist-mini-avatar">${JHD.esc(initials)}</div><h3>${JHD.esc(artist.name || "Artista")}</h3><p>${JHD.esc(artist.description || `${JHD.typeLabel(artist.artist_type)} · Ver canciones y álbumes.`)}</p></a>`;
 };
 
+JHD.descendantIds = (categoryId, categories = JHD.state.categories) => {
+  const ids = new Set([String(categoryId)]); let changed = true;
+  while (changed) { changed = false; (categories || []).forEach((category) => { const id = String(category.id || ""); if (category.parent_id && ids.has(String(category.parent_id)) && !ids.has(id)) { ids.add(id); changed = true; } }); }
+  return ids;
+};
+JHD.categorySongCount = (categoryId, categories = JHD.state.categories, songs = JHD.state.songs) => {
+  const ids = JHD.descendantIds(categoryId, categories);
+  return (songs || []).filter((song) => (song._categories || []).some((category) => ids.has(String(category.id)))).length;
+};
+
+JHD.initHomeDiscovery = () => {
+  if (JHD.page() !== "index.html" || JHD.$("#homeSongSearch")) return;
+  const actions = JHD.$(".hero .hero-actions");
+  if (!actions) return;
+  const form = document.createElement("form");
+  form.className = "home-discovery-search";
+  form.innerHTML = '<label for="homeSongSearch">Buscar un canto</label><input id="homeSongSearch" type="search" placeholder="Buscar por nombre, artista, tono o palabra..." autocomplete="off"><button class="song-btn" type="submit">Buscar</button>';
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const query = form.querySelector("input")?.value.trim() || "";
+    location.href = `canciones.html${query ? `?buscar=${encodeURIComponent(query)}` : ""}`;
+  });
+  actions.before(form);
+};
+JHD.homeRoots = (categories, type) => {
+  const typed = (categories || []).filter((category) => JHD.normalize(category.song_type) === type);
+  let roots = typed.filter((category) => !category.parent_id);
+  const generic = type === "catolico" ? ["catolico", "catolica"] : ["cristiano", "cristiana"];
+  if (roots.length === 1 && generic.includes(JHD.normalize(roots[0].name))) {
+    const children = typed.filter((category) => String(category.parent_id) === String(roots[0].id));
+    if (children.length) roots = children;
+  }
+  return roots.sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || String(a.name || "").localeCompare(String(b.name || ""), "es"));
+};
+JHD.renderHomeAccess = (categories, songs) => {
+  if (JHD.page() !== "index.html") return;
+  JHD.$("#homeFaithAccess")?.remove();
+  const hero = JHD.$(".hero");
+  if (!hero) return;
+  const group = (type, title, description, symbol) => {
+    const cards = JHD.homeRoots(categories, type).slice(0, 8).map((category) => {
+      const count = JHD.categorySongCount(category.id, categories, songs);
+      const key = category.slug || category.id;
+      return `<a class="home-access-card" href="categorias.html?tipo=${type}&carpeta=${encodeURIComponent(key)}"><strong>${JHD.esc(category.name || "Categoría")}</strong><small>${count} ${count === 1 ? "canto" : "cantos"}</small></a>`;
+    }).join("");
+    return `<article class="home-access-group"><div class="home-access-group-heading"><span class="home-access-symbol">${symbol}</span><div><h3>${title}</h3><p>${description}</p></div></div>${cards ? `<div class="home-access-grid">${cards}</div>` : '<p class="home-access-empty">Las categorías aparecerán aquí cuando se agreguen.</p>'}<div class="home-access-footer"><a class="text-link" href="categorias.html?tipo=${type}">Ver todas</a></div></article>`;
+  };
+  const section = document.createElement("section");
+  section.id = "homeFaithAccess";
+  section.className = "section home-faith-access";
+  section.innerHTML = `<div class="section-heading"><p class="hero-kicker">Encuentra rápido</p><h2>¿Para qué necesitas un canto?</h2></div><div class="home-access-groups">${group("catolico", "Católico", "Misa, tiempos litúrgicos y devociones.", "✝")}${group("cristiano", "Cristiano", "Alabanza, oración y ministerios.", "♫")}</div>`;
+  hero.insertAdjacentElement("afterend", section);
+};
+
 JHD.loadHome = async () => {
   if (JHD.page() !== "index.html") return;
+  JHD.initHomeDiscovery();
   const songsBox = JHD.$("#homeSongsGrid"), artistsBox = JHD.$("#homeArtistsGrid");
-  const [songsRes, artistsRes] = await Promise.all([JHD.fetchSongsWithRelations(), JHD.fetchArtists()]);
+  const [songsRes, artistsRes, categoriesRes] = await Promise.all([JHD.fetchSongsWithRelations(), JHD.fetchArtists(), JHD.fetchCategories()]);
+  if (categoriesRes.data) JHD.renderHomeAccess(categoriesRes.data || [], songsRes.data || []);
   if (songsBox) {
     if (songsRes.error) songsBox.innerHTML = JHD.errorCard("Error al cargar canciones", songsRes.error.message);
     else { const items = (songsRes.data || []).slice().sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 6); songsBox.innerHTML = items.length ? items.map(JHD.songCard).join("") : JHD.errorCard("Sin canciones", "Aún no hay canciones publicadas."); }
@@ -90,11 +150,6 @@ JHD.renderSongs = () => {
   if (grid) grid.innerHTML = items.length ? items.map(JHD.songCard).join("") : JHD.errorCard("Sin resultados", "Prueba otro nombre, artista, tono o filtro.");
   const notice = JHD.$("#songsCategoryNotice"); if (notice) notice.textContent = category ? `Mostrando: ${category.name} y sus subcategorías.` : "";
 };
-JHD.descendantIds = (categoryId) => {
-  const ids = new Set([String(categoryId)]); let changed = true;
-  while (changed) { changed = false; JHD.state.categories.forEach((category) => { const id = String(category.id || ""); if (category.parent_id && ids.has(String(category.parent_id)) && !ids.has(id)) { ids.add(id); changed = true; } }); }
-  return ids;
-};
 JHD.loadSongs = async () => {
   if (JHD.page() !== "canciones.html") return;
   const grid = JHD.$("#songsGrid"), [songsRes, categoriesRes] = await Promise.all([JHD.fetchSongsWithRelations(), JHD.fetchCategories()]);
@@ -113,5 +168,17 @@ JHD.loadArtists = async () => {
   const render = () => { const query = JHD.normalize(JHD.$("#artistSearch")?.value); const items = JHD.state.artists.filter((artist) => !query || JHD.normalize([artist.name, artist.description, artist.artist_type].join(" ")).includes(query)); if (grid) grid.innerHTML = items.length ? items.map(JHD.artistCard).join("") : JHD.errorCard("Sin resultados", "Prueba con otro nombre."); };
   JHD.$("#artistSearch")?.addEventListener("input", render); render();
 };
+
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-share-song]");
+  if (!button) return;
+  const href = new URL(button.dataset.shareSong || "canciones.html", location.href).href;
+  const title = button.dataset.shareTitle || "Canción";
+  const text = `Te comparto “${title}” en Juntos Hacia Dios.`;
+  if (navigator.share) {
+    try { await navigator.share({ title, text, url: href }); return; } catch (error) { if (error?.name === "AbortError") return; }
+  }
+  try { await navigator.clipboard.writeText(href); const original = button.textContent; button.textContent = "Enlace copiado"; setTimeout(() => { button.textContent = original; }, 1800); } catch (_) { window.prompt("Copia este enlace:", href); }
+});
 
 document.addEventListener("DOMContentLoaded", () => { JHD.initCommon(); JHD.loadHome(); JHD.loadSongs(); JHD.loadArtists(); });
