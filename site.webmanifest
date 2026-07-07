@@ -1,0 +1,18 @@
+{
+  "name": "Juntos Hacia Dios",
+  "short_name": "Juntos Hacia Dios",
+  "description": "Cancionero cristiano y católico con letras, acordes, tonos, artistas y categorías.",
+  "lang": "es-MX",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#0f1117",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
