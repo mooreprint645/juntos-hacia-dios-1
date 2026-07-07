@@ -5,6 +5,8 @@
   --public-card-hover-shadow: 0 16px 32px rgba(0, 0, 0, .22);
 }
 
+.catalog-load-more .song-btn[hidden] { display: none !important; }
+
 main:not(.admin-page) .song-card:not(.shimmer-card),
 main:not(.admin-page) .artist-card:not(.home-artist-card):not(.shimmer-card),
 main:not(.admin-page) .quick-card:not(.shimmer-card),
