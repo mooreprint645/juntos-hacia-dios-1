@@ -177,11 +177,14 @@
     enhanceCategoryCounts();
   };
 
-  document.addEventListener("DOMContentLoaded", () => {
+  const boot = () => {
     insertHomeSearch();
     loadHomeAccess();
     refresh();
     const observer = new MutationObserver(refresh);
     observer.observe(document.body, { childList: true, subtree: true });
-  });
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
 })();
