@@ -48,8 +48,10 @@
     if (!toolbar || !lyrics || document.getElementById("songReaderPreferences")) return false;
 
     const prefs = readPrefs();
+    const savedTranspose = readTranspose();
     let scale = prefs.fontScale;
-    let transpose = readTranspose();
+    let transpose = 0;
+    let restoringTranspose = false;
 
     const apply = () => {
       document.documentElement.style.setProperty("--jhd-lyrics-scale", String(scale));
@@ -88,6 +90,7 @@
 
     const transposeButtons = [...toolbar.querySelectorAll("#transposeBox [data-tone]")];
     transposeButtons.forEach((button) => button.addEventListener("click", () => {
+      if (restoringTranspose) return;
       const change = Number(button.dataset.tone);
       transpose = change === 0 ? 0 : Math.max(-11, Math.min(11, transpose + change));
       saveTranspose(transpose);
@@ -95,12 +98,14 @@
 
     apply();
 
-    if (transpose !== 0) {
-      const direction = transpose > 0 ? "1" : "-1";
+    if (savedTranspose !== 0) {
+      const direction = savedTranspose > 0 ? "1" : "-1";
       const trigger = toolbar.querySelector(`#transposeBox [data-tone="${direction}"]`);
-      const repetitions = Math.abs(transpose);
+      restoringTranspose = true;
       requestAnimationFrame(() => {
-        for (let index = 0; index < repetitions; index += 1) trigger?.click();
+        for (let index = 0; index < Math.abs(savedTranspose); index += 1) trigger?.click();
+        transpose = savedTranspose;
+        restoringTranspose = false;
       });
     }
 
