@@ -4,19 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Artista | Juntos Hacia Dios</title>
-  <meta name="description" content="Perfil de artista o ministerio con canciones, álbumes y colaboraciones.">
-  <link rel="stylesheet" href="style.css?v=2">
+  <meta name="description" content="Perfil de artista o ministerio con canciones, álbumes, colaboraciones y recursos.">
+  <link rel="stylesheet" href="style.css?v=4">
   <link rel="stylesheet" href="detalles.css?v=1">
   <style>
     .song-page-section{max-width:1080px;padding-top:36px}
-    .artist-hero-card{display:flex;align-items:center;gap:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius,22px);padding:30px;box-shadow:var(--shadow);margin-bottom:30px}
+    .artist-hero-card{display:flex;align-items:center;gap:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius,22px);padding:30px;box-shadow:var(--shadow);margin-bottom:22px}
     .artist-avatar-public{width:118px;height:118px;min-width:118px;border-radius:50%;background:var(--gold);color:#151515;display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:900}
     .artist-hero-card h1{margin:0;color:var(--gold);font-size:clamp(2rem,6vw,4rem);line-height:1.05}
     .artist-hero-card p{color:var(--muted);margin-top:10px;line-height:1.6}
     .artist-profile-stats{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
-    .artist-profile-stats span,.artist-profile-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 13px;border:1px solid rgba(246,196,83,.28);border-radius:999px;background:rgba(246,196,83,.12);color:var(--gold);font-weight:850;font-size:.86rem;text-decoration:none}
+    .artist-profile-stats span,.artist-profile-actions a,.artist-social-link{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:8px 13px;border:1px solid rgba(246,196,83,.28);border-radius:999px;background:rgba(246,196,83,.12);color:var(--gold);font-weight:850;font-size:.86rem;text-decoration:none}
     .artist-profile-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 10px}
-    .artist-profile-actions a:hover{background:var(--gold);color:#151515}
+    .artist-profile-actions a:hover,.artist-social-link:hover{background:var(--gold);color:#151515}
+    .artist-socials{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
     .artist-profile-section{margin:30px 0}
     .artist-profile-section-header{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid var(--border)}
     .artist-profile-section-header h2{margin:0;color:var(--gold)}
@@ -25,6 +26,14 @@
     .artist-profile-search label{display:block;margin-bottom:9px;color:var(--text);font-weight:800}
     .artist-profile-search input{width:100%;padding:15px 18px;border:1px solid var(--border);border-radius:999px;background:var(--card);color:var(--text);outline:none}
     .artist-profile-search input:focus{border-color:var(--gold);box-shadow:0 0 0 4px rgba(246,196,83,.12)}
+    .artist-filter-panel{padding:18px;border:1px solid var(--border);border-radius:20px;background:var(--card-soft)}
+    .artist-filter-panel h3{margin:0 0 11px;color:var(--text);font-size:1rem}
+    .artist-filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+    .artist-filter-row:last-child{margin-bottom:0}
+    .artist-filter-label{width:100%;color:var(--muted);font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+    .artist-filter-chip{border:1px solid var(--border);border-radius:999px;padding:8px 12px;background:var(--card);color:var(--text);font:inherit;font-size:.88rem;font-weight:800;cursor:pointer}
+    .artist-filter-chip:hover,.artist-filter-chip.active{border-color:var(--gold);background:rgba(246,196,83,.14);color:var(--gold)}
+    .artist-filter-status{margin:13px 0 0;color:var(--muted);font-size:.9rem}
     .artist-song-list{display:grid;gap:10px}
     .artist-song-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px 18px;border:1px solid var(--border);border-radius:18px;background:var(--card);color:var(--text);text-decoration:none;transition:transform .2s ease,border-color .2s ease,background .2s ease}
     .artist-song-row:hover{transform:translateY(-2px);border-color:rgba(246,196,83,.55);background:var(--card-soft)}
@@ -35,7 +44,13 @@
     .artist-more summary{cursor:pointer;color:var(--gold);font-weight:900}
     .artist-more .artist-song-list{margin-top:14px}
     .artist-empty{padding:18px;border:1px dashed var(--border);border-radius:18px;background:var(--card-soft);color:var(--muted)}
-    @media(max-width:700px){.song-page-section{padding-top:22px}.artist-hero-card{display:block;padding:22px}.artist-avatar-public{width:132px;height:132px;min-width:132px;margin:0 auto 20px;font-size:2.6rem}.artist-profile-actions{flex-wrap:nowrap;overflow-x:auto;padding:3px 2px 8px}.artist-profile-actions a{flex:0 0 auto;white-space:nowrap}.artist-profile-section-header{display:block}.artist-profile-section-header .hero-kicker{margin-top:4px}.artist-song-row{padding:14px}.artist-song-row h3{font-size:1rem}}
+    .artist-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .artist-category-card{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:15px;border:1px solid var(--border);border-radius:17px;background:var(--card);color:var(--text);text-decoration:none}
+    .artist-category-card:hover{border-color:var(--gold)}
+    .artist-category-card strong{color:var(--gold)}
+    .artist-category-card small{color:var(--muted);white-space:nowrap}
+    @media(max-width:760px){.artist-category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:700px){.song-page-section{padding-top:22px}.artist-hero-card{display:block;padding:22px}.artist-avatar-public{width:132px;height:132px;min-width:132px;margin:0 auto 20px;font-size:2.6rem}.artist-profile-actions{flex-wrap:nowrap;overflow-x:auto;padding:3px 2px 8px}.artist-profile-actions a{flex:0 0 auto;white-space:nowrap}.artist-profile-section-header{display:block}.artist-profile-section-header .hero-kicker{margin-top:4px}.artist-song-row{padding:14px}.artist-song-row h3{font-size:1rem}.artist-profile-stats span{font-size:.8rem}.artist-category-grid{grid-template-columns:1fr}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=1"></script>
@@ -72,6 +87,8 @@
     const songDate = (song) => { const date = Date.parse(song.created_at || song.updated_at || ''); return Number.isFinite(date) ? date : 0; };
     const songMeta = (song) => [song.song_type ? typeLabel(song.song_type) : '', song.tone ? `Tono ${song.tone}` : '', song.difficulty || ''].filter(Boolean).join(' · ') || 'Canto disponible';
     const sortSongs = (list) => [...list].sort((a,b) => songDate(b) - songDate(a) || String(a.title || '').localeCompare(String(b.title || ''),'es'));
+    const META_PATTERN = /<!--JHD_ARTIST_META:([\s\S]*?)-->\s*$/;
+    let activeArtistFilter = { kind: 'all', value: '' };
 
     function initNav(){
       const menu = $('#navMenu'), button = $('#menuToggle'), theme = $('#themeToggle');
@@ -82,20 +99,59 @@
       theme?.addEventListener('click', () => { const on = document.body.classList.toggle('light-mode'); localStorage.setItem('jhd-theme', on ? 'light':'dark'); theme.textContent = on ? '☀️':'🌙'; });
     }
     function empty(text){ return `<div class="artist-empty">${esc(text)}</div>`; }
-    function songRow(song, extraText){
-      const searchable = [song.title, song.tone, song.song_type, song.difficulty, extraText].filter(Boolean).join(' ');
-      return `<a class="artist-song-row artist-profile-song-item" data-search="${esc(norm(searchable))}" href="cancion.html?id=${encodeURIComponent(song.id)}"><div><h3>${esc(song.title || 'Canto sin título')}</h3><p>${esc(extraText || songMeta(song))}</p></div><span class="artist-row-icon">›</span></a>`;
+    function safeUrl(value){ try { const url = new URL(String(value || '')); return /^https?:$/.test(url.protocol) ? url.href : ''; } catch(_) { return ''; } }
+    function parseArtistProfile(value){
+      const raw = String(value || '');
+      const match = raw.match(META_PATTERN);
+      let links = {};
+      if(match){ try { const meta = JSON.parse(match[1]); links = meta?.links && typeof meta.links === 'object' ? meta.links : {}; } catch(_) {} }
+      return { description: raw.replace(META_PATTERN,'').trim(), links };
+    }
+    function socialLinksHTML(links){
+      const platforms = [
+        ['youtube','▶','YouTube'],['spotify','♫','Spotify'],['instagram','◎','Instagram'],['facebook','f','Facebook']
+      ];
+      const rows = platforms.map(([key,icon,label]) => {
+        const url = safeUrl(links[key]);
+        return url ? `<a class="artist-social-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${icon} ${label}</a>` : '';
+      }).filter(Boolean);
+      return rows.length ? `<div class="artist-socials">${rows.join('')}</div>` : '';
+    }
+    function songRow(song, categoriesBySong, extraText){
+      const categories = (categoriesBySong.get(String(song.id)) || []).map((category) => category.name).filter(Boolean);
+      const searchable = [song.title, song.tone, song.song_type, song.difficulty, categories.join(' '), extraText].filter(Boolean).join(' ');
+      return `<a class="artist-song-row artist-profile-song-item" data-search="${esc(norm(searchable))}" data-tone="${esc(norm(song.tone))}" data-categories="${esc(norm(categories.join(' ')))}" href="cancion.html?id=${encodeURIComponent(song.id)}"><div><h3>${esc(song.title || 'Canto sin título')}</h3><p>${esc(extraText || songMeta(song))}</p></div><span class="artist-row-icon">›</span></a>`;
     }
     function albumRow(album){
       const target = album.slug || album.title || album.id;
       return `<a class="artist-song-row" href="albumes.html?album=${encodeURIComponent(target)}"><div><h3>${esc(album.title || 'Álbum sin nombre')}</h3><p>${esc(album.description || 'Álbum registrado')}</p></div><span class="artist-row-icon">♪</span></a>`;
     }
-    function filterArtistSongs(value){
-      const query = norm(value).trim();
-      document.querySelectorAll('.artist-profile-song-item').forEach((row) => {
-        const text = row.dataset.search || norm(row.textContent || '');
-        row.style.display = !query || text.includes(query) ? '' : 'none';
+    function categoryRow(entry){
+      return `<a class="artist-category-card" href="canciones.html?categoria=${encodeURIComponent(entry.name)}"><strong>${esc(entry.name)}</strong><small>${entry.count} ${entry.count === 1 ? 'canto' : 'cantos'}</small></a>`;
+    }
+    function applyArtistFilters(){
+      const query = norm($('#artistProfileSearchInput')?.value).trim();
+      const rows = [...document.querySelectorAll('.artist-profile-song-item')];
+      let visible = 0;
+      rows.forEach((row) => {
+        const matchesText = !query || (row.dataset.search || '').includes(query);
+        const matchesFilter = activeArtistFilter.kind === 'all' || (activeArtistFilter.kind === 'tone' && (row.dataset.tone || '') === activeArtistFilter.value) || (activeArtistFilter.kind === 'category' && (row.dataset.categories || '').includes(activeArtistFilter.value));
+        const show = matchesText && matchesFilter;
+        row.style.display = show ? '' : 'none';
+        if(show) visible += 1;
       });
+      document.querySelectorAll('[data-artist-filter-kind]').forEach((button) => {
+        button.classList.toggle('active', button.dataset.artistFilterKind === activeArtistFilter.kind && button.dataset.artistFilterValue === activeArtistFilter.value);
+      });
+      const status = $('#artistSongFilterStatus');
+      if(status) status.textContent = query || activeArtistFilter.kind !== 'all' ? `${visible} resultado${visible === 1 ? '' : 's'} visible${visible === 1 ? '' : 's'}.` : 'Explora los cantos por tono o categoría.';
+    }
+    function bindArtistFilters(){
+      $('#artistProfileSearchInput')?.addEventListener('input', applyArtistFilters);
+      document.querySelectorAll('[data-artist-filter-kind]').forEach((button) => button.addEventListener('click', () => {
+        activeArtistFilter = { kind: button.dataset.artistFilterKind || 'all', value: button.dataset.artistFilterValue || '' };
+        applyArtistFilters();
+      }));
     }
 
     async function loadProfile(){
@@ -106,58 +162,92 @@
       const { data: artist, error: artistError } = await artistQuery.maybeSingle();
       if(artistError || !artist){ box.innerHTML = empty('Este artista no existe o fue eliminado.'); return; }
       document.title = `${artist.name || 'Artista'} | Juntos Hacia Dios`;
+      const profile = parseArtistProfile(artist.description);
       const ownResult = await db.from('song_artists').select('song_id').eq('artist_id',artist.id);
       if(ownResult.error){ box.innerHTML = empty(`No se pudieron cargar las canciones: ${ownResult.error.message}`); return; }
       const songIds = [...new Set((ownResult.data || []).map((row) => row.song_id).filter(Boolean))];
-      const [songsResult, relationsResult, albumsResult] = await Promise.all([
+      const [songsResult, relationsResult, albumsResult, categoriesResult] = await Promise.all([
         songIds.length ? db.from('songs').select('*').in('id',songIds) : Promise.resolve({data:[],error:null}),
         songIds.length ? db.from('song_artists').select('song_id,artist_id,artists(id,name,slug,artist_type)').in('song_id',songIds) : Promise.resolve({data:[],error:null}),
-        db.from('albums').select('*').eq('artist_id',artist.id).order('title',{ascending:true})
+        db.from('albums').select('*').eq('artist_id',artist.id).order('title',{ascending:true}),
+        songIds.length ? db.from('song_categories').select('song_id,categories(id,name,slug,song_type)').in('song_id',songIds) : Promise.resolve({data:[],error:null})
       ]);
-      if(songsResult.error || relationsResult.error || albumsResult.error){ box.innerHTML = empty('No se pudo completar el perfil del artista.'); return; }
+      if(songsResult.error || relationsResult.error || albumsResult.error || categoriesResult.error){ box.innerHTML = empty('No se pudo completar el perfil del artista.'); return; }
+
       const songs = sortSongs(songsResult.data || []);
-      const recentSongs = songs.slice(0,3);
+      const featuredSongs = songs.slice(0,3);
       const firstEight = songs.slice(0,8);
       const remainingSongs = songs.slice(8);
       const relationsBySong = new Map();
       (relationsResult.data || []).forEach((row) => { if(!relationsBySong.has(String(row.song_id))) relationsBySong.set(String(row.song_id),[]); if(row.artists) relationsBySong.get(String(row.song_id)).push(row.artists); });
+      const categoriesBySong = new Map();
+      (categoriesResult.data || []).forEach((row) => { if(!categoriesBySong.has(String(row.song_id))) categoriesBySong.set(String(row.song_id),[]); if(row.categories) categoriesBySong.get(String(row.song_id)).push(row.categories); });
       const collaborations = songs.filter((song) => (relationsBySong.get(String(song.id)) || []).some((other) => String(other.id) !== String(artist.id)));
       const otherNames = (song) => (relationsBySong.get(String(song.id)) || []).filter((other) => String(other.id) !== String(artist.id)).map((other) => other.name).filter(Boolean).join(' · ');
       const albums = albumsResult.data || [];
+
+      const toneMap = new Map();
+      songs.forEach((song) => { const tone = String(song.tone || '').trim(); if(tone) toneMap.set(tone, (toneMap.get(tone) || 0) + 1); });
+      const topTones = [...toneMap.entries()].sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0],'es')).slice(0,5);
+      const categoryMap = new Map();
+      categoriesBySong.forEach((categories) => categories.forEach((category) => {
+        if(!category?.name) return;
+        const key = String(category.id || category.name);
+        const saved = categoryMap.get(key) || { name: category.name, count: 0 };
+        saved.count += 1;
+        categoryMap.set(key, saved);
+      }));
+      const categories = [...categoryMap.values()].sort((a,b) => b.count - a.count || a.name.localeCompare(b.name,'es'));
+      const latest = songs.find((song) => songDate(song) > 0);
+      const filterTones = topTones.slice(0,4);
+      const filterCategories = categories.slice(0,6);
+
       box.innerHTML = `
         <section class="artist-hero-card">
           <div class="artist-avatar-public">${esc(initials(artist.name))}</div>
           <div>
             <p class="hero-kicker">${esc(typeLabel(artist.artist_type || artist.type))}</p>
             <h1>${esc(artist.name || 'Sin nombre')}</h1>
-            <p>${esc(artist.description || 'Ministerio o artista registrado.')}</p>
-            <div class="artist-profile-stats"><span>${songs.length} canto${songs.length === 1 ? '' : 's'}</span><span>${albums.length} álbum${albums.length === 1 ? '' : 'es'}</span><span>${collaborations.length} colaboración${collaborations.length === 1 ? '' : 'es'}</span></div>
-            <nav class="artist-profile-actions"><a href="#cancionesArtista">Canciones</a><a href="#albumesArtista">Álbumes</a><a href="#colaboracionesArtista">Colaboraciones</a></nav>
+            <p>${esc(profile.description || 'Ministerio o artista registrado.')}</p>
+            <div class="artist-profile-stats"><span>${songs.length} canto${songs.length === 1 ? '' : 's'}</span><span>${topTones.length ? `Tonos frecuentes: ${esc(topTones.slice(0,3).map(([tone]) => tone).join(' · '))}` : 'Sin tonos registrados'}</span>${latest ? `<span>Última: ${esc(latest.title || 'Canto')}</span>` : ''}</div>
+            ${socialLinksHTML(profile.links)}
+            <nav class="artist-profile-actions"><a href="#destacadasArtista">Destacadas</a><a href="#cancionesArtista">Canciones</a><a href="#albumesArtista">Álbumes</a><a href="#colaboracionesArtista">Colaboraciones</a><a href="#categoriasArtista">Categorías</a></nav>
           </div>
         </section>
         <section class="artist-profile-section artist-profile-search">
           <label for="artistProfileSearchInput">Buscar canciones de este artista</label>
-          <input id="artistProfileSearchInput" type="search" placeholder="Buscar por título, tono o tipo...">
+          <input id="artistProfileSearchInput" type="search" placeholder="Buscar por título, tono o categoría...">
         </section>
-        <section class="artist-profile-section" id="recientesArtista">
-          <div class="artist-profile-section-header"><div><p class="hero-kicker">Lo más reciente</p><h2>Canciones recientes</h2></div></div>
-          <div class="artist-song-list">${recentSongs.length ? recentSongs.map((song) => songRow(song)).join('') : empty('Este artista aún no tiene cantos publicados.')}</div>
+        <section class="artist-profile-section artist-filter-panel" aria-label="Filtros de canciones">
+          <h3>Filtrar sus canciones</h3>
+          <div class="artist-filter-row"><span class="artist-filter-label">Mostrar</span><button class="artist-filter-chip active" type="button" data-artist-filter-kind="all" data-artist-filter-value="">Todas</button>${filterTones.map(([tone]) => `<button class="artist-filter-chip" type="button" data-artist-filter-kind="tone" data-artist-filter-value="${esc(norm(tone))}">Tono ${esc(tone)}</button>`).join('')}</div>
+          ${filterCategories.length ? `<div class="artist-filter-row"><span class="artist-filter-label">Por categoría</span>${filterCategories.map((category) => `<button class="artist-filter-chip" type="button" data-artist-filter-kind="category" data-artist-filter-value="${esc(norm(category.name))}">${esc(category.name)}</button>`).join('')}</div>` : ''}
+          <p class="artist-filter-status" id="artistSongFilterStatus">Explora los cantos por tono o categoría.</p>
+        </section>
+        <section class="artist-profile-section" id="destacadasArtista">
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Para comenzar</p><h2>Canciones destacadas</h2><p>Las más recientes que se han agregado a este perfil.</p></div></div>
+          <div class="artist-song-list">${featuredSongs.length ? featuredSongs.map((song) => songRow(song, categoriesBySong)).join('') : empty('Este artista aún no tiene cantos publicados.')}</div>
         </section>
         <section class="artist-profile-section" id="cancionesArtista">
           <div class="artist-profile-section-header"><div><p class="hero-kicker">Cancionero</p><h2>Cantos de este artista</h2></div><p>${songs.length} en total</p></div>
-          <div class="artist-song-list">${firstEight.length ? firstEight.map((song) => songRow(song)).join('') : empty('Este artista aún no tiene cantos registrados.')}</div>
-          ${remainingSongs.length ? `<details class="artist-more"><summary>Ver las ${remainingSongs.length} canciones restantes</summary><div class="artist-song-list">${remainingSongs.map((song) => songRow(song)).join('')}</div></details>` : ''}
+          <div class="artist-song-list">${firstEight.length ? firstEight.map((song) => songRow(song, categoriesBySong)).join('') : empty('Este artista aún no tiene cantos registrados.')}</div>
+          ${remainingSongs.length ? `<details class="artist-more"><summary>Ver las ${remainingSongs.length} canciones restantes</summary><div class="artist-song-list">${remainingSongs.map((song) => songRow(song, categoriesBySong)).join('')}</div></details>` : ''}
         </section>
         <section class="artist-profile-section" id="albumesArtista">
-          <div class="artist-profile-section-header"><div><p class="hero-kicker">Discografía</p><h2>Álbumes</h2></div></div>
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Discografía</p><h2>Álbumes</h2></div><p>${albums.length} registrados</p></div>
           <div class="artist-song-list">${albums.length ? albums.map(albumRow).join('') : empty('Este artista aún no tiene álbumes registrados.')}</div>
         </section>
         <section class="artist-profile-section" id="colaboracionesArtista">
-          <div class="artist-profile-section-header"><div><p class="hero-kicker">Juntos en canción</p><h2>Colaboraciones</h2></div></div>
-          <div class="artist-song-list">${collaborations.length ? collaborations.map((song) => songRow(song, otherNames(song) ? `Con ${otherNames(song)} · ${songMeta(song)}` : songMeta(song))).join('') : empty('Aún no hay colaboraciones registradas para este artista.')}</div>
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Juntos en canción</p><h2>Colaboraciones</h2></div><p>${collaborations.length} registradas</p></div>
+          <div class="artist-song-list">${collaborations.length ? collaborations.map((song) => songRow(song, categoriesBySong, otherNames(song) ? `Con ${otherNames(song)} · ${songMeta(song)}` : songMeta(song))).join('') : empty('Aún no hay colaboraciones registradas para este artista.')}</div>
+        </section>
+        <section class="artist-profile-section" id="categoriasArtista">
+          <div class="artist-profile-section-header"><div><p class="hero-kicker">Dónde aparece</p><h2>Categorías</h2></div><p>${categories.length} relacionadas</p></div>
+          <div class="artist-category-grid">${categories.length ? categories.map(categoryRow).join('') : empty('Todavía no hay categorías asignadas a las canciones de este artista.')}</div>
         </section>`;
-      $('#artistProfileSearchInput')?.addEventListener('input', (event) => filterArtistSongs(event.target.value));
+      bindArtistFilters();
     }
+
     initNav();
     loadProfile();
     $('#year').textContent = new Date().getFullYear();
