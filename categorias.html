@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Categorías | Juntos Hacia Dios</title>
   <meta name="description" content="Explora cantos por categorías y subcategorías.">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="public-accessibility.css?v=1">
   <link rel="stylesheet" href="catalogo.css?v=2">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=1"></script>
-  <script src="public-core.js?v=3" defer></script>
-  <script src="categorias.js?v=4" defer></script>
-  <script src="category-counts.js?v=1" defer></script>
+  <script src="public-core.js?v=4" defer></script>
+  <script src="categorias.js?v=5" defer></script>
 </head>
 <body>
   <header>
     <nav class="navbar">
       <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
-      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú">☰</button>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
       <div class="nav-menu" id="navMenu">
         <a href="index.html">Inicio</a>
         <a href="canciones.html">Canciones</a>
@@ -25,7 +25,6 @@
         <a class="active" href="categorias.html">Categorías</a>
         <a href="albumes.html">Álbumes</a>
         <a href="donaciones.html">Donaciones</a>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
       </div>
     </nav>
   </header>
@@ -38,7 +37,8 @@
       </div>
     </section>
     <section class="section">
-      <div class="search-container"><input id="categorySearch" type="search" placeholder="Buscar categoría..."></div>
+      <div class="search-container"><label class="sr-only" for="categorySearch">Buscar categoría</label><input id="categorySearch" type="search" placeholder="Buscar categoría..." autocomplete="off"></div>
+      <p class="catalog-results-status" id="categoryResultsStatus" aria-live="polite"></p>
       <div class="quick-cards" id="categoriesGrid"><article class="quick-card shimmer-card"><h3>Cargando categorías...</h3><p>Un momento por favor.</p></article></div>
     </section>
   </main>
