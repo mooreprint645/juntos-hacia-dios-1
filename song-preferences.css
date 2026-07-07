@@ -1,0 +1,69 @@
+/* Preferencias de lectura por usuario */
+#songLyrics,
+#songLyrics.lyrics-block {
+  font-size: calc(1rem * var(--jhd-lyrics-scale, 1));
+  transition: font-size .18s ease;
+}
+
+#songReaderPreferences {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.song-reader-preference-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,.025);
+}
+
+.song-reader-preference-group .song-btn {
+  width: auto;
+  min-height: 30px;
+  margin: 0;
+  padding: 5px 10px;
+}
+
+#songFontSizeLabel {
+  min-width: 70px;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+body.song-hide-chords #songLyrics .chord-line {
+  display: none;
+}
+
+body.song-hide-chords #songLyrics .song-line {
+  margin-bottom: 10px;
+}
+
+body.song-hide-chords #songLyrics .lyric-line {
+  white-space: pre-wrap;
+}
+
+@media (max-width: 560px) {
+  #songReaderPreferences {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .song-reader-preference-group {
+    justify-content: center;
+  }
+
+  #songReaderPreferences > .song-btn {
+    width: 100%;
+    margin: 0;
+  }
+}
