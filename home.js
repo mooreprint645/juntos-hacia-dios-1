@@ -2,11 +2,13 @@
   const JHD = window.JHD;
   if (!JHD || JHD.page() !== "index.html") return;
 
-  const CACHE_KEY = "jhd-home-search-index-v3";
+  const CACHE_KEY = "jhd-home-search-index-v4";
   const CACHE_MAX_AGE = 10 * 60 * 1000;
   const esc = (value) => JHD.esc(value);
   const normalize = (value) => JHD.normalize(value);
   const cleanDescription = (value) => String(value || "").replace(/<!--JHD_ARTIST_META:[\s\S]*?-->\s*$/, "").trim();
+  const initials = (name) => String(name || "JHD").split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
+  const pluralCantos = (count) => `${count} ${count === 1 ? "canto" : "cantos"}`;
 
   function readCache() {
     try {
@@ -24,6 +26,17 @@
     } catch (_) {}
   }
 
+  function mapRelations(rows, relationKey, targetKey) {
+    const map = new Map();
+    (rows || []).forEach((row) => {
+      const id = String(row[relationKey] || "");
+      if (!id || !row[targetKey]) return;
+      if (!map.has(id)) map.set(id, []);
+      map.get(id).push(row[targetKey]);
+    });
+    return map;
+  }
+
   async function buildSearchIndex() {
     const cached = readCache();
     if (cached) return cached;
@@ -37,8 +50,10 @@
       JHD.sb.from("song_categories").select("song_id,category_id")
     ]);
 
+    const error = [artistsRes, songsRes, songArtistsRes, categoriesRes, songCategoriesRes].find((result) => result.error)?.error;
+    if (error) throw error;
+
     const artists = artistsRes.data || [];
-    const songs = songsRes.data || [];
     const artistById = new Map(artists.map((artist) => [String(artist.id), artist]));
     const categoryById = new Map((categoriesRes.data || []).map((category) => [String(category.id), category]));
     const artistNamesBySong = new Map();
@@ -51,7 +66,6 @@
       if (!artistNamesBySong.has(id)) artistNamesBySong.set(id, []);
       artistNamesBySong.get(id).push(artist.name || "");
     });
-
     (songCategoriesRes.data || []).forEach((row) => {
       const category = categoryById.get(String(row.category_id));
       if (!category) return;
@@ -63,15 +77,9 @@
     const data = {
       artists: artists.map((artist) => {
         const description = cleanDescription(artist.description);
-        return {
-          id: artist.id,
-          name: artist.name || "",
-          slug: artist.slug || "",
-          description,
-          search: normalize([artist.name, artist.slug, description].join(" "))
-        };
+        return { id: artist.id, name: artist.name || "", slug: artist.slug || "", description, search: normalize([artist.name, artist.slug, description].join(" ")) };
       }),
-      songs: songs.map((song) => {
+      songs: (songsRes.data || []).map((song) => {
         const artistsForSong = artistNamesBySong.get(String(song.id)) || [];
         const categoriesForSong = categoryNamesBySong.get(String(song.id)) || [];
         return {
@@ -87,7 +95,6 @@
         };
       })
     };
-
     writeCache(data);
     return data;
   }
@@ -118,46 +125,30 @@
       results.hidden = true;
       results.innerHTML = "";
     };
-
     const artistItem = (artist) => `<a class="home-search-result" href="artista.html?slug=${encodeURIComponent(artist.slug || JHD.slugify(artist.name))}"><span class="home-search-result-icon" aria-hidden="true">✝</span><span class="home-search-result-copy"><strong>${esc(artist.name)}</strong><small>${esc(artist.description || "Ver artista y sus cantos")}</small></span></a>`;
     const songItem = (song) => {
       const meta = [song.artists.join(" · "), song.categories.join(" · "), song.song_type ? JHD.typeLabel(song.song_type) : "", song.tone ? `Tono ${song.tone}` : ""].filter(Boolean).join(" · ");
       return `<a class="home-search-result" href="cancion.html?slug=${encodeURIComponent(song.slug || JHD.slugify(song.title))}"><span class="home-search-result-icon" aria-hidden="true">♫</span><span class="home-search-result-copy"><strong>${esc(song.title)}</strong><small>${esc(meta || "Ver letra y acordes")}</small></span></a>`;
     };
-
     const render = (query) => {
       const key = normalize(query);
-      if (key.length < 2) {
-        hide();
-        return;
-      }
+      if (key.length < 2) return hide();
       if (!index) {
         results.hidden = false;
         results.innerHTML = '<p class="home-search-empty">Preparando búsqueda…</p>';
         return;
       }
-
       const artists = index.artists.filter((artist) => artist.search.includes(key)).slice(0, 4);
       const songs = index.songs.filter((song) => song.search.includes(key)).slice(0, 6);
-      results.innerHTML = [
-        '<div class="home-search-group"><p class="home-search-group-title">Artistas</p>',
-        artists.length ? artists.map(artistItem).join("") : '<p class="home-search-empty">No hay artistas que coincidan.</p>',
-        '</div>',
-        '<div class="home-search-group"><p class="home-search-group-title">Canciones</p>',
-        songs.length ? songs.map(songItem).join("") : '<p class="home-search-empty">No hay canciones que coincidan.</p>',
-        '</div>'
-      ].join("");
+      results.innerHTML = `<div class="home-search-group"><p class="home-search-group-title">Artistas</p>${artists.length ? artists.map(artistItem).join("") : '<p class="home-search-empty">No hay artistas que coincidan.</p>'}</div><div class="home-search-group"><p class="home-search-group-title">Canciones</p>${songs.length ? songs.map(songItem).join("") : '<p class="home-search-empty">No hay canciones que coincidan.</p>'}</div>`;
       results.hidden = false;
     };
-
     const prepare = async () => {
       if (index || preparing) return;
       preparing = true;
-      try {
-        index = await buildSearchIndex();
-      } catch (_) {
-        index = { artists: [], songs: [] };
-      } finally {
+      try { index = await buildSearchIndex(); }
+      catch (_) { index = { artists: [], songs: [] }; }
+      finally {
         preparing = false;
         if (input.value.trim().length >= 2) render(input.value);
       }
@@ -166,22 +157,15 @@
     input.addEventListener("focus", prepare, { once: true });
     input.addEventListener("input", () => {
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        prepare();
-        render(input.value);
-      }, 120);
+      timer = setTimeout(() => { prepare(); render(input.value); }, 120);
     });
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") hide();
-    });
+    input.addEventListener("keydown", (event) => { if (event.key === "Escape") hide(); });
     input.addEventListener("blur", () => setTimeout(hide, 180));
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const query = input.value.trim();
       location.href = `canciones.html${query ? `?buscar=${encodeURIComponent(query)}` : ""}`;
     });
-
-    setTimeout(prepare, 750);
   }
 
   function homeRoots(categories, type) {
@@ -199,7 +183,6 @@
     document.getElementById("homeFaithAccess")?.remove();
     const hero = document.querySelector(".hero");
     if (!hero) return;
-
     const descendants = (categoryId) => {
       const ids = new Set([String(categoryId)]);
       let changed = true;
@@ -207,20 +190,15 @@
         changed = false;
         (categories || []).forEach((category) => {
           const id = String(category.id || "");
-          if (category.parent_id && ids.has(String(category.parent_id)) && !ids.has(id)) {
-            ids.add(id);
-            changed = true;
-          }
+          if (category.parent_id && ids.has(String(category.parent_id)) && !ids.has(id)) { ids.add(id); changed = true; }
         });
       }
       return ids;
     };
-
     const countSongs = (categoryId) => {
       const ids = descendants(categoryId);
       return new Set((songCategoryLinks || []).filter((row) => ids.has(String(row.category_id))).map((row) => String(row.song_id))).size;
     };
-
     const group = (type, title, description, symbol) => {
       const cards = homeRoots(categories, type).slice(0, 8).map((category) => {
         const count = countSongs(category.id);
@@ -229,7 +207,6 @@
       }).join("");
       return `<article class="home-access-group"><div class="home-access-group-heading"><span class="home-access-symbol" aria-hidden="true">${symbol}</span><div><h3>${title}</h3><p>${description}</p></div></div>${cards ? `<div class="home-access-grid">${cards}</div>` : '<p class="home-access-empty">Las categorías aparecerán aquí cuando se agreguen.</p>'}<div class="home-access-footer"><a class="text-link" href="categorias.html?tipo=${type}">Ver todas</a></div></article>`;
     };
-
     const section = document.createElement("section");
     section.id = "homeFaithAccess";
     section.className = "section home-faith-access";
@@ -237,11 +214,18 @@
     hero.insertAdjacentElement("afterend", section);
   }
 
+  function renderArtistCard(artist) {
+    const name = artist.name || "Artista";
+    const href = `artista.html?slug=${encodeURIComponent(artist.slug || JHD.slugify(name))}`;
+    const description = cleanDescription(artist.description) || "Explora sus canciones, álbumes y colaboraciones.";
+    const count = Number(artist.song_count || 0);
+    return `<a class="artist-card home-artist-card" href="${href}" aria-label="Ver perfil de ${esc(name)}"><div class="home-artist-card-top"><div class="home-artist-avatar" aria-hidden="true">${esc(initials(name))}</div><div class="home-artist-heading"><span class="home-artist-type">${esc(JHD.typeLabel(artist.artist_type).replace("General", "Ministerio"))}</span><h3>${esc(name)}</h3></div><span class="home-artist-arrow" aria-hidden="true">→</span></div><p class="home-artist-description">${esc(description)}</p><div class="home-artist-footer"><span class="home-artist-count"><span aria-hidden="true">♫</span> ${esc(pluralCantos(count))}</span><span class="home-artist-link">Ver perfil <span aria-hidden="true">→</span></span></div></a>`;
+  }
+
   async function loadHome() {
     const songsBox = document.querySelector("#homeSongsGrid");
     const artistsBox = document.querySelector("#homeArtistsGrid");
     installSearch();
-
     if (!JHD.sb) {
       if (songsBox) songsBox.innerHTML = JHD.errorCard("Sin conexión", "No se pudo iniciar la biblioteca de canciones.");
       if (artistsBox) artistsBox.innerHTML = JHD.errorCard("Sin conexión", "No se pudo iniciar la biblioteca de artistas.");
@@ -249,30 +233,54 @@
       return;
     }
 
-    const [songsRes, artistsRes, categoriesRes, categoryLinksRes] = await Promise.all([
-      JHD.fetchSongsWithRelations(null, { orderBy: "created_at", ascending: false, limit: 6 }),
+    const [songsRes, artistsRes, categoriesRes, songCategoryRes, songArtistRes] = await Promise.all([
+      JHD.sb.from("songs").select("id,title,slug,song_type,tone,difficulty,created_at").order("created_at", { ascending: false }).limit(6),
       JHD.sb.from("artists").select("id,name,slug,description,artist_type,created_at").order("created_at", { ascending: false }).limit(6),
       JHD.sb.from("categories").select("id,name,slug,parent_id,song_type,sort_order").order("sort_order", { ascending: true }).order("name", { ascending: true }),
-      JHD.sb.from("song_categories").select("song_id,category_id")
+      JHD.sb.from("song_categories").select("song_id,category_id,categories(id,name,slug,description,song_type,parent_id,sort_order)"),
+      JHD.sb.from("song_artists").select("song_id,artist_id,artists(id,name,slug,description,artist_type)")
     ]);
 
+    const songIds = new Set((songsRes.data || []).map((song) => String(song.id)));
+    const songArtists = new Map();
+    const songCategories = new Map();
+    const artistSongIds = new Map();
+    (songArtistRes.data || []).forEach((row) => {
+      const songId = String(row.song_id || "");
+      const artistId = String(row.artist_id || "");
+      if (songIds.has(songId) && row.artists) {
+        if (!songArtists.has(songId)) songArtists.set(songId, []);
+        songArtists.get(songId).push(row.artists);
+      }
+      if (artistId && row.song_id) {
+        if (!artistSongIds.has(artistId)) artistSongIds.set(artistId, new Set());
+        artistSongIds.get(artistId).add(String(row.song_id));
+      }
+    });
+    (songCategoryRes.data || []).forEach((row) => {
+      const songId = String(row.song_id || "");
+      if (!songIds.has(songId) || !row.categories) return;
+      if (!songCategories.has(songId)) songCategories.set(songId, []);
+      songCategories.get(songId).push(row.categories);
+    });
+
     if (songsBox) {
-      songsBox.innerHTML = songsRes.error
-        ? JHD.errorCard("Error al cargar canciones", songsRes.error.message)
-        : (songsRes.data || []).length
-          ? (songsRes.data || []).map(JHD.songCard).join("")
-          : JHD.errorCard("Sin canciones", "Aún no hay canciones publicadas.");
+      if (songsRes.error) songsBox.innerHTML = JHD.errorCard("Error al cargar canciones", songsRes.error.message);
+      else {
+        const songs = (songsRes.data || []).map((song) => ({ ...song, _artists: songArtists.get(String(song.id)) || [], _categories: songCategories.get(String(song.id)) || [] }));
+        songsBox.innerHTML = songs.length ? songs.map(JHD.songCard).join("") : JHD.errorCard("Sin canciones", "Aún no hay canciones publicadas.");
+      }
     }
 
     if (artistsBox) {
-      artistsBox.innerHTML = artistsRes.error
-        ? JHD.errorCard("Error al cargar artistas", artistsRes.error.message)
-        : (artistsRes.data || []).length
-          ? (artistsRes.data || []).map((artist) => JHD.artistCard({ ...artist, description: cleanDescription(artist.description) })).join("")
-          : JHD.errorCard("Sin artistas", "Aún no hay artistas publicados.");
+      if (artistsRes.error) artistsBox.innerHTML = JHD.errorCard("Error al cargar artistas", artistsRes.error.message);
+      else {
+        const artists = (artistsRes.data || []).map((artist) => ({ ...artist, song_count: artistSongIds.get(String(artist.id))?.size || 0 }));
+        artistsBox.innerHTML = artists.length ? artists.map(renderArtistCard).join("") : JHD.errorCard("Sin artistas", "Aún no hay artistas publicados.");
+      }
     }
 
-    renderFaithAccess(categoriesRes.data || [], categoryLinksRes.data || []);
+    renderFaithAccess(categoriesRes.data || [], (songCategoryRes.data || []).map((row) => ({ song_id: row.song_id, category_id: row.category_id })));
   }
 
   document.addEventListener("DOMContentLoaded", loadHome);
