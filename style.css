@@ -257,3 +257,22 @@ body.light-mode .search-container input, body.light-mode .admin-form input, body
   .quick-cards, .songs-grid, .artists-grid { grid-template-columns: 1fr; }
   .quick-card { min-height: 0; }
 }
+
+/* Tema único: el sitio permanece siempre en oscuro. */
+html { color-scheme: dark; }
+body.light-mode {
+  --bg: #0f1117;
+  --card: #191d27;
+  --card-soft: #202532;
+  --text: #ffffff;
+  --muted: #b9bdc9;
+  --gold: #f6c453;
+  --gold-dark: #c9972b;
+  --border: rgba(255,255,255,.09);
+  --shadow: 0 20px 55px rgba(0,0,0,.28);
+}
+body.light-mode .search-container input,
+body.light-mode .admin-form input,
+body.light-mode .admin-form select,
+body.light-mode .admin-form textarea { background: rgba(255,255,255,.06); }
+.theme-toggle { display: none !important; }
