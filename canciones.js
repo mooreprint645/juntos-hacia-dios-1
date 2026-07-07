@@ -80,7 +80,6 @@ async function loadRelations(songs) {
   const artistsBySong = new Map();
   const categoriesBySong = new Map();
   const albumsBySong = new Map();
-
   (artistRes.data || []).forEach((row) => {
     if (!artistsBySong.has(row.song_id)) artistsBySong.set(row.song_id, []);
     if (row.artists) artistsBySong.get(row.song_id).push(row.artists);
@@ -151,7 +150,6 @@ async function searchSongIds(query) {
   const term = String(query || "").trim();
   if (!term) return null;
   const pattern = `%${term}%`;
-
   const [titleRes, toneRes, difficultyRes, typeRes, artistsRes, categoriesRes, albumsRes] = await Promise.all([
     client.from("songs").select("id").ilike("title", pattern).limit(1000),
     client.from("songs").select("id").ilike("tone", pattern).limit(1000),
@@ -176,7 +174,6 @@ async function searchSongIds(query) {
     songIdsFromJoin("song_categories", "category_id", (categoriesRes.data || []).map((row) => row.id)),
     songIdsFromJoin("album_songs", "album_id", (albumsRes.data || []).map((row) => row.id))
   ]);
-
   [artistSongs, categorySongs, albumSongs].forEach((ids) => ids.forEach((id) => direct.add(id)));
   return direct;
 }
@@ -184,22 +181,18 @@ async function searchSongIds(query) {
 async function resolveSongIds() {
   const restrictions = [];
   const query = String(searchInput?.value || "").trim();
-
   if (categoryParam) {
     const categories = await getCategories();
     const key = normalize(categoryParam);
     const category = categories.find((item) => String(item.id) === String(categoryParam) || normalize(item.slug) === key || normalize(item.name) === key);
-    if (!category) restrictions.push(new Set());
-    else restrictions.push(await songIdsFromJoin("song_categories", "category_id", [...descendantIds(category.id, categories)]));
+    restrictions.push(category ? await songIdsFromJoin("song_categories", "category_id", [...descendantIds(category.id, categories)]) : new Set());
   }
-
   if (albumParam) {
     const albums = await getAlbums();
     const key = normalize(albumParam);
     const album = albums.find((item) => String(item.id) === String(albumParam) || normalize(item.slug) === key || normalize(item.title) === key);
     restrictions.push(album ? await songIdsFromJoin("album_songs", "album_id", [album.id]) : new Set());
   }
-
   if (query) restrictions.push(await searchSongIds(query));
   return intersection(restrictions);
 }
@@ -208,13 +201,24 @@ function setStatus(message) {
   if (resultsStatus) resultsStatus.textContent = message;
 }
 
+function updateLoadMore() {
+  if (!loadMoreButton) return;
+  const hasMore = visibleSongs.length < totalResults;
+  loadMoreButton.hidden = !hasMore;
+  loadMoreButton.disabled = loading;
+  loadMoreButton.textContent = loading ? "Cargando…" : "Cargar más canciones";
+}
+
 function renderSongs() {
   if (!songsGrid) return;
   setStatus(`${totalResults} ${totalResults === 1 ? "canción encontrada" : "canciones encontradas"}`);
-
   if (!visibleSongs.length) {
     songsGrid.innerHTML = "<article class='song-card'><h3>Sin resultados</h3><p>Prueba otro nombre, artista, tono o filtro.</p></article>";
-    if (loadMoreButton) loadMoreButton.hidden = true;
+    if (loadMoreButton) {
+      loadMoreButton.hidden = true;
+      loadMoreButton.disabled = false;
+      loadMoreButton.textContent = "Cargar más canciones";
+    }
     return;
   }
 
@@ -232,13 +236,7 @@ function renderSongs() {
   songsGrid.querySelectorAll("[data-share-url]").forEach((button) => {
     button.addEventListener("click", () => shareSong(button.dataset.shareTitle || "Canción", new URL(button.dataset.shareUrl, location.href).href, button));
   });
-
-  if (loadMoreButton) {
-    const hasMore = visibleSongs.length < totalResults;
-    loadMoreButton.hidden = !hasMore;
-    loadMoreButton.disabled = loading;
-    loadMoreButton.textContent = loading ? "Cargando…" : "Cargar más canciones";
-  }
+  updateLoadMore();
 }
 
 async function shareSong(title, url, button) {
@@ -279,39 +277,36 @@ async function fetchSongs(append = false) {
   const token = ++requestVersion;
   const currentPage = append ? page + 1 : 0;
   loading = true;
-
   if (!append) beginFreshLoad();
-  else if (loadMoreButton) {
-    loadMoreButton.disabled = true;
-    loadMoreButton.textContent = "Cargando…";
-  }
+  else updateLoadMore();
 
   try {
     const ids = await resolveSongIds();
     if (token !== requestVersion) return;
-
     if (ids && !ids.size) {
       page = 0;
-      visibleSongs = [];
       totalResults = 0;
+      visibleSongs = [];
       loading = false;
       renderSongs();
       return;
     }
 
-    let query = client.from("songs").select("*", { count: "exact" }).order("title", { ascending: true });
+    let query = client.from("songs").select("*").order("title", { ascending: true });
     if (activeType) query = query.eq("song_type", activeType);
     if (ids) query = query.in("id", [...ids]);
-    const start = currentPage * PAGE_SIZE;
-    const { data, error, count } = await query.range(start, start + PAGE_SIZE - 1);
+    const { data, error } = await query;
     if (error) throw error;
     if (token !== requestVersion) return;
 
-    const hydrated = await loadRelations(data || []);
+    const allSongs = data || [];
+    const start = currentPage * PAGE_SIZE;
+    const batch = allSongs.slice(start, start + PAGE_SIZE);
+    const hydrated = await loadRelations(batch);
     if (token !== requestVersion) return;
 
     page = currentPage;
-    totalResults = Number(count || 0);
+    totalResults = allSongs.length;
     visibleSongs = append ? [...visibleSongs, ...hydrated] : hydrated;
     loading = false;
     renderSongs();
@@ -354,13 +349,11 @@ searchInput?.addEventListener("input", () => {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => resetAndFetch("replace"), 260);
 });
-
 filterButtons.forEach((button) => button.addEventListener("click", () => {
   activeType = normalize(button.dataset.type);
   updateFilterState();
   resetAndFetch("push");
 }));
-
 loadMoreButton?.addEventListener("click", () => fetchSongs(true));
 window.addEventListener("popstate", () => {
   readRoute();
