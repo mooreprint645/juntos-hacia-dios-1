@@ -40,7 +40,7 @@ as $$
       (
         nullif(btrim(coalesce(p_artist_type, '')), '') is null
         or translate(lower(coalesce(to_jsonb(a) ->> 'artist_type', to_jsonb(a) ->> 'type', '')), 'áéíóúü', 'aeiouu')
-          = translate(lower(btrim(p_artist_type)), 'áéíóúü', 'aeiouu')
+          like '%' || translate(lower(btrim(p_artist_type)), 'áéíóúü', 'aeiouu') || '%'
       )
       and (
         nullif(btrim(coalesce(p_query, '')), '') is null
