@@ -17,7 +17,7 @@
     const feedback = document.createElement("aside");
     feedback.id = "songFeedback";
     feedback.className = "song-feedback";
-    feedback.innerHTML = `<p><strong>¿Detectaste un detalle por corregir?</strong>Ayúdanos a revisar letra, acordes, tono o información del canto.</p><a class="text-link" href="contacto.html?${params.toString()}">Reportar corrección →</a>`;
+    feedback.innerHTML = `<p><strong>¿Letra, acorde o tono incorrecto?</strong>Reporta el detalle y se revisará para mejorar el cancionero.</p><a class="text-link" href="contacto.html?${params.toString()}">Reportar detalle</a>`;
     const links = document.getElementById("songLinks");
     if (links?.parentElement === shell) links.after(feedback);
     else lyrics.after(feedback);
