@@ -8,7 +8,7 @@
     if (window.__jhdSongVersionsLoader) return;
     window.__jhdSongVersionsLoader = true;
     const script = document.createElement("script");
-    script.src = "admin-song-versions.js?v=1";
+    script.src = "admin-song-versions.js?v=2";
     script.defer = true;
     document.head.append(script);
   }
