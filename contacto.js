@@ -76,7 +76,7 @@
   form?.addEventListener("submit", (event) => {
     event.preventDefault();
     if (!valid()) return;
-    const destination = "spiblack0@gmail.com";
+    const destination = "juntoshaciadiosacordes@gmail.com";
     const subject = `[${type?.value || "Mensaje"}] ${title?.value.trim() || "Juntos Hacia Dios"}`;
     if (status) status.textContent = "Abriendo tu aplicación de correo…";
     location.href = `mailto:${destination}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(buildMessage())}`;
