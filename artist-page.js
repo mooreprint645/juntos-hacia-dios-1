@@ -58,6 +58,17 @@
     return `<div class="artist-empty">${esc(message)}</div>`;
   }
 
+  function isMissingScaleRpc(error) {
+    const detail = String(error?.message || "");
+    return error?.code === "PGRST202" || /search_artist_songs_catalog|get_artist_profile_summary|search_albums_catalog/i.test(detail);
+  }
+
+  function rpcErrorMessage(error) {
+    const detail = String(error?.message || "");
+    if (isMissingScaleRpc(error)) return "Estamos usando una carga básica del perfil mientras se activa la versión escalable.";
+    return detail || "Revisa la conexión e inténtalo de nuevo.";
+  }
+
   function safeSocial(label, icon, value) {
     try {
       const url = new URL(value || "");
@@ -111,12 +122,50 @@
     }
   }
 
-  function rpcErrorMessage(error) {
-    const detail = String(error?.message || "");
-    if (error?.code === "PGRST202" || /search_artist_songs_catalog|get_artist_profile_summary/i.test(detail)) {
-      return "Falta activar el perfil escalable. Ejecuta supabase-artist-profile-scale.sql en Supabase.";
+  function attachRelations(songs, artistsRows, categoryRows, albumRows) {
+    const artistsMap = new Map(), categoriesMap = new Map(), albumsMap = new Map();
+    (artistsRows || []).forEach((row) => { const key = String(row.song_id); if (!artistsMap.has(key)) artistsMap.set(key, []); if (row.artists) artistsMap.get(key).push(row.artists); });
+    (categoryRows || []).forEach((row) => { const key = String(row.song_id); if (!categoriesMap.has(key)) categoriesMap.set(key, []); if (row.categories) categoriesMap.get(key).push(row.categories); });
+    (albumRows || []).forEach((row) => { const key = String(row.song_id); if (!albumsMap.has(key)) albumsMap.set(key, []); if (row.albums) albumsMap.get(key).push(row.albums); });
+    return (songs || []).map((song) => ({ ...song, _artists: artistsMap.get(String(song.id)) || [], _categories: categoriesMap.get(String(song.id)) || [], _albums: albumsMap.get(String(song.id)) || [] }));
+  }
+
+  async function fetchSongsFallback(append, currentPage, token) {
+    const linksRes = await db.from("song_artists").select("song_id").eq("artist_id", artist.id);
+    if (linksRes.error) throw linksRes.error;
+    const ids = [...new Set((linksRes.data || []).map((row) => row.song_id).filter(Boolean))];
+    if (!ids.length) {
+      if (token !== requestVersion) return;
+      page = currentPage;
+      totalSongs = 0;
+      visibleSongs = [];
+      loading = false;
+      renderSongs();
+      return;
     }
-    return detail || "Revisa la conexión e inténtalo de nuevo.";
+
+    const [songsRes, artistRes, categoryRes, albumRes] = await Promise.all([
+      db.from("songs").select("id,title,slug,tone,song_type,difficulty").in("id", ids).order("title", { ascending: true }),
+      db.from("song_artists").select("song_id,artists(id,name,slug)").in("song_id", ids),
+      db.from("song_categories").select("song_id,categories(id,name,slug)").in("song_id", ids),
+      db.from("album_songs").select("song_id,albums(id,title,slug)").in("song_id", ids)
+    ]);
+    const error = songsRes.error || artistRes.error || categoryRes.error || albumRes.error;
+    if (error) throw error;
+    if (token !== requestVersion) return;
+
+    const query = norm($("#artistSearch")?.value || "");
+    const rows = attachRelations(songsRes.data || [], artistRes.data || [], categoryRes.data || [], albumRes.data || []).filter((song) => {
+      const text = norm([song.title, song.tone, song.song_type, song.difficulty, (song._categories || []).map((item) => item.name).join(" ")].join(" "));
+      return !query || text.includes(query);
+    });
+    const start = currentPage * PAGE_SIZE;
+    const slice = rows.slice(start, start + PAGE_SIZE);
+    page = currentPage;
+    totalSongs = rows.length;
+    visibleSongs = append ? [...visibleSongs, ...slice] : slice;
+    loading = false;
+    renderSongs();
   }
 
   async function fetchSongs(append = false) {
@@ -140,7 +189,13 @@
         p_limit: PAGE_SIZE,
         p_offset: currentPage * PAGE_SIZE
       });
-      if (error) throw error;
+      if (error) {
+        if (isMissingScaleRpc(error)) {
+          await fetchSongsFallback(append, currentPage, token);
+          return;
+        }
+        throw error;
+      }
       if (token !== requestVersion) return;
 
       const rows = (data || []).map((row) => ({ ...row, _artists: jsonList(row.artists), _categories: jsonList(row.categories), _albums: jsonList(row.albums) }));
@@ -206,6 +261,37 @@
     return ids.map((songId) => byId.get(String(songId))).filter(Boolean);
   }
 
+  async function loadProfileFallback() {
+    const linkRes = await db.from("song_artists").select("song_id,role").eq("artist_id", artist.id);
+    if (linkRes.error) throw linkRes.error;
+    const ids = [...new Set((linkRes.data || []).map((row) => row.song_id).filter(Boolean))];
+    const albumsRes = await db.from("albums").select("id,title,slug,description,artist_id").eq("artist_id", artist.id).order("sort_order", { ascending: true }).order("title", { ascending: true });
+    let categories = [];
+    if (ids.length) {
+      const categoryRes = await db.from("song_categories").select("song_id,categories(id,name,slug)").in("song_id", ids);
+      if (!categoryRes.error) {
+        const map = new Map();
+        (categoryRes.data || []).forEach((row) => {
+          if (!row.categories) return;
+          const key = String(row.categories.id || row.categories.name);
+          const current = map.get(key) || { ...row.categories, song_count: 0 };
+          current.song_count += 1;
+          map.set(key, current);
+        });
+        categories = [...map.values()].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "es"));
+      }
+    }
+    return {
+      summary: {
+        song_count: ids.length,
+        album_count: (albumsRes.data || []).length,
+        collaboration_count: (linkRes.data || []).filter((row) => norm(row.role) !== "principal").length,
+        categories
+      },
+      albums: albumsRes.error ? [] : (albumsRes.data || [])
+    };
+  }
+
   async function load() {
     const box = $("#artistProfile");
     if (!box || !db || (!id && !slug)) {
@@ -223,18 +309,28 @@
     artist = data;
     document.title = `${artist.name || "Artista"} | Juntos Hacia Dios`;
 
-    const [summaryRes, featuredSongs, albumsRes] = await Promise.all([
+    const featuredSongs = await loadFeaturedSongs();
+    const [summaryRes, albumsRes] = await Promise.all([
       db.rpc("get_artist_profile_summary", { p_artist_id: artist.id }),
-      loadFeaturedSongs(),
       db.rpc("search_albums_catalog", { p_query: null, p_artist_id: artist.id, p_limit: 24, p_offset: 0 })
     ]);
-    if (summaryRes.error) {
-      box.innerHTML = empty(rpcErrorMessage(summaryRes.error));
-      return;
+
+    if (summaryRes.error || albumsRes.error) {
+      try {
+        const fallback = await loadProfileFallback();
+        summary = fallback.summary;
+        renderProfile(featuredSongs, fallback.albums);
+        fetchSongs(false);
+        return;
+      } catch (fallbackError) {
+        box.innerHTML = empty(rpcErrorMessage(summaryRes.error || albumsRes.error || fallbackError));
+        return;
+      }
     }
+
     summary = summaryRes.data?.[0] || summary;
     summary.categories = jsonList(summary.categories);
-    renderProfile(featuredSongs, albumsRes.error ? [] : (albumsRes.data || []));
+    renderProfile(featuredSongs, albumsRes.data || []);
     fetchSongs(false);
   }
 
