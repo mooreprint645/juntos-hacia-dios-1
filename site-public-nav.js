@@ -1,20 +1,25 @@
 (() => {
-  const addAboutLink = () => {
+  const ensureLink = (menu, href, label, beforeHref) => {
+    let link = menu.querySelector(`a[href="${href}"]`);
+    if (!link) {
+      link = document.createElement("a");
+      link.href = href;
+      link.textContent = label;
+      const before = beforeHref ? menu.querySelector(`a[href="${beforeHref}"]`) : null;
+      if (before) menu.insertBefore(link, before);
+      else menu.append(link);
+    }
+    if (location.pathname.toLowerCase().endsWith(`/${href}`) || location.pathname.toLowerCase().endsWith(href)) link.classList.add("active");
+  };
+
+  const addPublicLinks = () => {
     if (/(^|\/)admin\.html$/i.test(location.pathname)) return;
     document.querySelectorAll("#navMenu").forEach((menu) => {
-      let about = menu.querySelector('a[href="acerca.html"]');
-      if (!about) {
-        about = document.createElement("a");
-        about.href = "acerca.html";
-        about.textContent = "Acerca de";
-        const donations = menu.querySelector('a[href="donaciones.html"]');
-        if (donations) menu.insertBefore(about, donations);
-        else menu.append(about);
-      }
-      if (/(^|\/)acerca\.html$/i.test(location.pathname)) about.classList.add("active");
+      ensureLink(menu, "solicitar-canto.html", "Solicitar canto", "donaciones.html");
+      ensureLink(menu, "acerca.html", "Acerca de", "donaciones.html");
     });
   };
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", addAboutLink, { once: true });
-  else addAboutLink();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", addPublicLinks, { once: true });
+  else addPublicLinks();
 })();
