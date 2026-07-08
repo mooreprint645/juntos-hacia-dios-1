@@ -1,1 +1,68 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Acerca de | Juntos Hacia Dios</title><meta name="description" content="Conoce Juntos Hacia Dios, un cancionero para comunidades, coros y ministerios."><meta name="theme-color" content="#0f1117"><meta property="og:title" content="Acerca de | Juntos Hacia Dios"><meta property="og:description" content="Un cancionero para comunidades, coros y ministerios."><meta property="og:type" content="website"><meta property="og:image" content="social-card.svg"><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="manifest" href="site.webmanifest"><link rel="stylesheet" href="style.css?v=5"><link rel="stylesheet" href="site-shell.css?v=5"><link rel="stylesheet" href="public-cards.css?v=2"><link rel="stylesheet" href="public-accessibility.css?v=2"><link rel="stylesheet" href="public-info-pages.css?v=1"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="Supabase.js?v=1"></script><script src="seo.js?v=1" defer></script></head><body><header><nav class="navbar"><a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a><button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button><div class="nav-menu" id="navMenu"><a href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="albumes.html">Álbumes</a><a href="donaciones.html">Donaciones</a></div></nav></header><main><section class="public-info-page"><article class="public-info-hero"><p class="hero-kicker">Conoce el proyecto</p><h1>Un cancionero para <strong>servir y acompañar</strong>.</h1><p>Juntos Hacia Dios reúne letras, acordes, tonos y recursos musicales para ayudar a coros, ministerios y comunidades a preparar momentos de oración, celebración y alabanza.</p></article><div class="public-info-grid"><article class="public-info-card"><span class="info-icon" aria-hidden="true">♫</span><h2>Encuentra</h2><p>Busca cantos por título, artista, categoría o tono y consulta la letra con acordes desde cualquier dispositivo.</p></article><article class="public-info-card"><span class="info-icon" aria-hidden="true">✦</span><h2>Prepara</h2><p>Ajusta tono, capo, tamaño de letra y visualización de acordes para adaptarte a tu instrumento o ministerio.</p></article><article class="public-info-card"><span class="info-icon" aria-hidden="true">♥</span><h2>Comparte</h2><p>Explora artistas, álbumes y categorías para descubrir cantos relacionados y preparar repertorios en comunidad.</p></article></div><article class="public-info-section"><p class="hero-kicker">Cómo usarlo</p><h2>Hecho para el momento de servir</h2><p>Abre un canto, revisa su letra y ajusta los acordes antes de un ensayo o celebración. Para una experiencia más enfocada, activa el modo lectura desde la página de cada canción.</p><div class="public-info-actions"><a class="song-btn" href="canciones.html">Explorar canciones</a><a class="song-btn secondary" href="categorias.html">Ver categorías</a></div></article><article class="public-info-section"><p class="hero-kicker">Una comunidad que mejora</p><h2>Tu participación también cuenta</h2><p>Un tono, una letra, una categoría o un artista pueden necesitar ajustes. También pueden faltar cantos que ayuden a otras comunidades. Envía una sugerencia o reporta una corrección para mejorar el cancionero.</p><div class="public-info-actions"><a class="song-btn" href="contacto.html">Solicitar un canto o reportar corrección</a></div></article></section></main><footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p></footer><script>document.getElementById("year").textContent=new Date().getFullYear();const b=document.getElementById("menuToggle"),m=document.getElementById("navMenu");b?.addEventListener("click",()=>{const o=Boolean(m?.classList.toggle("open"));b.setAttribute("aria-expanded",String(o))});</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Acerca de | Juntos Hacia Dios</title>
+  <meta name="description" content="Conoce Juntos Hacia Dios, un cancionero para comunidades, coros y ministerios.">
+  <meta name="theme-color" content="#0f1117">
+  <meta property="og:title" content="Acerca de | Juntos Hacia Dios">
+  <meta property="og:description" content="Un cancionero para comunidades, coros y ministerios.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="social-card.svg">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="site-shell.css?v=5">
+  <link rel="stylesheet" href="public-cards.css?v=2">
+  <link rel="stylesheet" href="public-accessibility.css?v=2">
+  <link rel="stylesheet" href="public-info-pages.css?v=1">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="Supabase.js?v=2"></script>
+  <script src="seo.js?v=1" defer></script>
+  <script src="about-content.js?v=1" defer></script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <a class="brand" href="index.html" aria-label="Juntos Hacia Dios"><span class="brand-icon">✝</span><span>Juntos Hacia Dios</span></a>
+      <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false">☰</button>
+      <div class="nav-menu" id="navMenu">
+        <a href="index.html">Inicio</a><a href="canciones.html">Canciones</a><a href="artistas.html">Artistas</a><a href="categorias.html">Categorías</a><a href="albumes.html">Álbumes</a><a href="donaciones.html">Donaciones</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="public-info-page">
+      <article class="public-info-hero">
+        <p class="hero-kicker" data-about="eyebrow">Conoce el proyecto</p>
+        <h1><span data-about="title">Un cancionero para</span> <strong data-about="highlight">servir y acompañar</strong>.</h1>
+        <p data-about="intro">Juntos Hacia Dios reúne letras, acordes, tonos y recursos musicales para ayudar a coros, ministerios y comunidades a preparar momentos de oración, celebración y alabanza.</p>
+      </article>
+      <div class="public-info-grid">
+        <article class="public-info-card"><span class="info-icon" aria-hidden="true">♫</span><h2 data-about="card1_title">Encuentra</h2><p data-about="card1_text">Busca cantos por título, artista, categoría o tono y consulta la letra con acordes desde cualquier dispositivo.</p></article>
+        <article class="public-info-card"><span class="info-icon" aria-hidden="true">✦</span><h2 data-about="card2_title">Prepara</h2><p data-about="card2_text">Ajusta tono, capo, tamaño de letra y visualización de acordes para adaptarte a tu instrumento o ministerio.</p></article>
+        <article class="public-info-card"><span class="info-icon" aria-hidden="true">♥</span><h2 data-about="card3_title">Comparte</h2><p data-about="card3_text">Explora artistas, álbumes y categorías para descubrir cantos relacionados y preparar repertorios en comunidad.</p></article>
+      </div>
+      <article class="public-info-section">
+        <p class="hero-kicker" data-about="use_eyebrow">Cómo usarlo</p>
+        <h2 data-about="use_title">Hecho para el momento de servir</h2>
+        <p data-about="use_text">Abre un canto, revisa su letra y ajusta los acordes antes de un ensayo o celebración. Para una experiencia más enfocada, activa el modo lectura desde la página de cada canción.</p>
+        <div class="public-info-actions"><a class="song-btn" href="canciones.html">Explorar canciones</a><a class="song-btn secondary" href="categorias.html">Ver categorías</a></div>
+      </article>
+      <article class="public-info-section">
+        <p class="hero-kicker" data-about="community_eyebrow">Una comunidad que mejora</p>
+        <h2 data-about="community_title">Tu participación también cuenta</h2>
+        <p data-about="community_text">Un tono, una letra, una categoría o un artista pueden necesitar ajustes. También pueden faltar cantos que ayuden a otras comunidades. Envía una sugerencia o reporta una corrección para mejorar el cancionero.</p>
+        <div class="public-info-actions"><a class="song-btn" href="contacto.html">Solicitar un canto o reportar corrección</a></div>
+      </article>
+    </section>
+  </main>
+  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p></footer>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    const b = document.getElementById("menuToggle"), m = document.getElementById("navMenu");
+    b?.addEventListener("click", () => { const o = Boolean(m?.classList.toggle("open")); b.setAttribute("aria-expanded", String(o)); });
+  </script>
+</body>
+</html>
