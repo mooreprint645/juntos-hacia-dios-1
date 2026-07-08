@@ -23,6 +23,23 @@
     tag.setAttribute("content", value);
   };
 
+  const setSchema = (title, description, url) => {
+    if (document.getElementById("jhdStaticPageSchema")) return;
+    const script = document.createElement("script");
+    script.id = "jhdStaticPageSchema";
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": title,
+      "description": description,
+      "url": url,
+      "inLanguage": "es-MX",
+      "isPartOf": { "@type": "WebSite", "name": "Juntos Hacia Dios", "url": location.origin }
+    });
+    document.head.append(script);
+  };
+
   const setSeo = () => {
     const page = (location.pathname.split("/").pop() || "index.html").toLowerCase();
     const data = {
@@ -38,15 +55,18 @@
     }[page];
     if (!data) return;
     const url = location.href.split("#")[0];
+    const image = new URL("social-card.svg", location.href).href;
     document.title = data[0];
     setMeta("name", "description", data[1]);
     setMeta("name", "robots", "index,follow");
     setMeta("property", "og:title", data[0]);
     setMeta("property", "og:description", data[1]);
     setMeta("property", "og:url", url);
+    setMeta("property", "og:image", image);
     setMeta("property", "og:locale", "es_MX");
     setMeta("name", "twitter:title", data[0]);
     setMeta("name", "twitter:description", data[1]);
+    setMeta("name", "twitter:image", image);
     let canonical = document.head.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement("link");
@@ -54,6 +74,7 @@
       document.head.append(canonical);
     }
     canonical.href = url;
+    setSchema(data[0], data[1], url);
   };
 
   const addPublicLinks = () => {
