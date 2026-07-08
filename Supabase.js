@@ -11,8 +11,10 @@ window.supabaseClient = supabaseClient;
 
 (() => {
   if (/(^|\/)admin\.html$/i.test(location.pathname)) return;
-  const script = document.createElement("script");
-  script.src = "site-footer-links.js?v=1";
-  script.async = true;
-  document.head.append(script);
+  ["site-footer-links.js?v=1", "site-public-nav.js?v=1"].forEach((src) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    document.head.append(script);
+  });
 })();
