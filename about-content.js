@@ -2,20 +2,20 @@
   const fallback = {
     eyebrow: "Conoce el proyecto",
     title: "Un cancionero para",
-    highlight: "servir y acompañar",
-    intro: "Juntos Hacia Dios reúne letras, acordes, tonos y recursos musicales para ayudar a coros, ministerios y comunidades a preparar momentos de oración, celebración y alabanza.",
+    highlight: "servir con música y fe",
+    intro: "Juntos Hacia Dios reúne letras, acordes, tonos y recursos musicales para acompañar a coros, ministerios y comunidades en la preparación de celebraciones, ensayos y momentos de oración.",
     card1_title: "Encuentra",
-    card1_text: "Busca cantos por título, artista, categoría o tono y consulta la letra con acordes desde cualquier dispositivo.",
+    card1_text: "Busca cantos por título, artista, categoría, álbum o tono y consulta la letra con acordes desde cualquier dispositivo.",
     card2_title: "Prepara",
-    card2_text: "Ajusta tono, capo, tamaño de letra y visualización de acordes para adaptarte a tu instrumento o ministerio.",
+    card2_text: "Ajusta tono, capo, tamaño de letra y modo lectura para adaptar cada canto al instrumento y al momento pastoral.",
     card3_title: "Comparte",
-    card3_text: "Explora artistas, álbumes y categorías para descubrir cantos relacionados y preparar repertorios en comunidad.",
+    card3_text: "Explora artistas, álbumes y cantos relacionados para formar repertorios útiles y compartirlos con tu comunidad.",
     use_eyebrow: "Cómo usarlo",
-    use_title: "Hecho para el momento de servir",
-    use_text: "Abre un canto, revisa su letra y ajusta los acordes antes de un ensayo o celebración. Para una experiencia más enfocada, activa el modo lectura desde la página de cada canción.",
-    community_eyebrow: "Una comunidad que mejora",
-    community_title: "Tu participación también cuenta",
-    community_text: "Un tono, una letra, una categoría o un artista pueden necesitar ajustes. También pueden faltar cantos que ayuden a otras comunidades. Envía una sugerencia o reporta una corrección para mejorar el cancionero."
+    use_title: "Pensado para ensayos y celebraciones",
+    use_text: "Abre un canto, revisa su letra, tono y acordes, y prepara la versión que necesitas antes de tocar. En cada canción puedes activar herramientas de lectura para concentrarte mejor durante el servicio.",
+    community_eyebrow: "Construido con ayuda de la comunidad",
+    community_title: "Tu participación también mejora el cancionero",
+    community_text: "Si encuentras una letra, acorde, tono, artista o categoría que necesita revisión, puedes reportarlo. También puedes solicitar cantos que ayuden a otros coros y ministerios. Cada aporte ayuda a que este espacio sea más claro, ordenado y útil."
   };
 
   const render = (content) => {
