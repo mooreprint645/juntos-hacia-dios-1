@@ -1,7 +1,19 @@
+#capoControls > button{
+  background:var(--card)!important;
+  color:var(--muted)!important;
+  border:1px solid var(--border)!important;
+  box-shadow:none!important;
+}
+
+#capoControls > button.active{
+  background:var(--gold)!important;
+  color:#151515!important;
+  border-color:var(--gold)!important;
+  box-shadow:0 10px 24px rgba(246,196,83,.2)!important;
+}
+
 @media(max-width:700px){
-  .song-reader-toolbar #capoControls,
-  body.song-reading-mode .song-reading-sheet-section #capoControls,
-  body.song-reading-mode.song-reading-settings-open .song-reading-sheet-section #capoControls{
+  #capoControls{
     display:grid!important;
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
     align-items:stretch;
@@ -12,11 +24,8 @@
     overflow:visible!important;
   }
 
-  .song-reader-toolbar #capoControls .filter-btn,
-  body.song-reading-mode .song-reading-sheet-section #capoControls .filter-btn,
-  body.song-reading-mode.song-reading-settings-open .song-reading-sheet-section #capoControls .filter-btn{
+  #capoControls > button{
     display:flex!important;
-    flex:0 0 auto!important;
     width:100%!important;
     min-width:0!important;
     min-height:48px!important;
