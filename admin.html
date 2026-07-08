@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="admin-catalog-check.css?v=1">
   <link rel="stylesheet" href="admin-home-section.css?v=3">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="Supabase.js?v=1"></script>
+  <script src="Supabase.js?v=2"></script>
   <script src="admin-access-guard.js?v=1" defer></script>
   <script src="admin-pro.js?v=1" defer></script>
   <script src="admin-artist-profile-storage.js?v=1" defer></script>
@@ -25,6 +25,7 @@
   <script src="admin-backup-import.js?v=1" defer></script>
   <script src="admin-catalog-check.js?v=1" defer></script>
   <script src="admin-home-section.js?v=3" defer></script>
+  <script src="admin-public-pages.js?v=1" defer></script>
 </head>
 <body>
   <header>
@@ -60,10 +61,7 @@
     </section>
     <section id="adminWorkspace" class="admin-hidden" aria-live="polite"></section>
   </main>
-  <footer>
-    <p>© <span id="year">2026</span> Juntos Hacia Dios</p>
-    <p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p>
-  </footer>
+  <footer><p>© <span id="year">2026</span> Juntos Hacia Dios</p><p><a href="index.html">Inicio</a> · <a href="canciones.html">Canciones</a> · <a href="artistas.html">Artistas</a></p></footer>
   <script>document.getElementById("year").textContent = new Date().getFullYear()</script>
 </body>
 </html>
