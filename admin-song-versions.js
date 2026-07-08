@@ -57,11 +57,28 @@
     return found.length ? found.map((song) => `<button class="song-btn small-btn secondary" type="button" data-pick-version-song="${esc(song.id)}">${esc(songLabel(song))}</button>`).join("") : `<p class="admin-note">No se encontraron canciones con esa búsqueda.</p>`;
   }
 
+  function selectedHTML() {
+    const selected = selectedSong();
+    return selected ? `<strong>Seleccionada:</strong> ${esc(songLabel(selected))}` : "";
+  }
+
+  function refreshPicker() {
+    const results = $("#songVersionResults");
+    const selected = $("#songVersionSelected");
+    const button = $("#addSongVersion");
+    if (results) results.innerHTML = availableSongsHTML();
+    if (selected) {
+      selected.innerHTML = selectedHTML();
+      selected.hidden = !targetSongId;
+    }
+    if (button) button.disabled = !targetSongId;
+    bindPickerButtons();
+  }
+
   function panelHTML() {
     const current = currentSong();
     const currentTitle = current?.title || "esta canción";
-    const selected = selectedSong();
-    return `<div class="admin-resource-draft" id="songVersionsAdmin" data-editing-song="${esc(editingSongId)}"><h4>Otras versiones de la canción</h4><p class="admin-note">Relaciona <strong>${esc(currentTitle)}</strong> con otra canción cuando sea la misma obra en otra versión, artista, tono o arreglo.</p><input id="songVersionSearch" value="${esc(searchText)}" placeholder="Buscar canción existente para relacionar"><div class="admin-mini-list">${availableSongsHTML()}</div>${selected ? `<p class="admin-note"><strong>Seleccionada:</strong> ${esc(songLabel(selected))}</p>` : ""}<div class="admin-form-grid"><label>Etiqueta<input id="songVersionLabel" placeholder="Ejemplo: Versión acústica, En vivo, Ministerio X"></label><label>Notas<input id="songVersionNotes" placeholder="Opcional: diferencia principal"></label></div><div class="admin-actions"><button class="song-btn small-btn" id="addSongVersion" type="button" ${targetSongId ? "" : "disabled"}>Agregar versión</button></div><div class="admin-mini-list">${versions.length ? versions.map((row) => versionRowHTML(row)).join("") : `<p class="admin-note">Todavía no hay versiones relacionadas.</p>`}</div><p class="admin-message" id="songVersionsAdminStatus" aria-live="polite"></p></div>`;
+    return `<div class="admin-resource-draft" id="songVersionsAdmin" data-editing-song="${esc(editingSongId)}"><h4>Otras versiones de la canción</h4><p class="admin-note">Relaciona <strong>${esc(currentTitle)}</strong> con otra canción cuando sea la misma obra en otra versión, artista, tono o arreglo.</p><input id="songVersionSearch" value="${esc(searchText)}" placeholder="Buscar canción existente para relacionar" autocomplete="off"><div class="admin-mini-list" id="songVersionResults">${availableSongsHTML()}</div><p class="admin-note" id="songVersionSelected" ${targetSongId ? "" : "hidden"}>${selectedHTML()}</p><div class="admin-form-grid"><label>Etiqueta<input id="songVersionLabel" placeholder="Ejemplo: Versión acústica, En vivo, Ministerio X"></label><label>Notas<input id="songVersionNotes" placeholder="Opcional: diferencia principal"></label></div><div class="admin-actions"><button class="song-btn small-btn" id="addSongVersion" type="button" ${targetSongId ? "" : "disabled"}>Agregar versión</button></div><div class="admin-mini-list" id="songVersionCurrentList">${versions.length ? versions.map((row) => versionRowHTML(row)).join("") : `<p class="admin-note">Todavía no hay versiones relacionadas.</p>`}</div><p class="admin-message" id="songVersionsAdminStatus" aria-live="polite"></p></div>`;
   }
 
   function versionRowHTML(row) {
@@ -116,16 +133,38 @@
     inject();
   }
 
-  function redrawPanel() {
-    $("#songVersionsAdmin")?.remove();
-    inject();
+  function bindPickerButtons() {
+    $$('[data-pick-version-song]').forEach((button) => {
+      if (button.dataset.boundVersionPick === "1") return;
+      button.dataset.boundVersionPick = "1";
+      button.addEventListener("click", () => {
+        targetSongId = button.dataset.pickVersionSong;
+        refreshPicker();
+      });
+    });
   }
 
   function bindPanel() {
-    $("#songVersionSearch")?.addEventListener("input", (event) => { searchText = event.target.value; targetSongId = ""; redrawPanel(); });
-    $$('[data-pick-version-song]').forEach((button) => button.addEventListener("click", () => { targetSongId = button.dataset.pickVersionSong; redrawPanel(); }));
-    $("#addSongVersion")?.addEventListener("click", addVersion);
-    $$('[data-remove-version]').forEach((button) => button.addEventListener("click", () => removeVersion(button.dataset.removeVersion)));
+    const input = $("#songVersionSearch");
+    if (input && input.dataset.boundVersionSearch !== "1") {
+      input.dataset.boundVersionSearch = "1";
+      input.addEventListener("input", (event) => {
+        searchText = event.target.value;
+        targetSongId = "";
+        refreshPicker();
+      });
+    }
+    bindPickerButtons();
+    const add = $("#addSongVersion");
+    if (add && add.dataset.boundAddVersion !== "1") {
+      add.dataset.boundAddVersion = "1";
+      add.addEventListener("click", addVersion);
+    }
+    $$('[data-remove-version]').forEach((button) => {
+      if (button.dataset.boundRemoveVersion === "1") return;
+      button.dataset.boundRemoveVersion = "1";
+      button.addEventListener("click", () => removeVersion(button.dataset.removeVersion));
+    });
   }
 
   async function addVersion() {
