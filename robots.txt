@@ -3,3 +3,5 @@ Allow: /
 
 # El panel de administración se protege por autenticación.
 Disallow: /admin.html
+
+Sitemap: https://mooreprint645.github.io/juntos-hacia-dios-1/sitemap.xml
