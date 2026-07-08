@@ -49,6 +49,7 @@ for insert
 to anon, authenticated
 with check (
   char_length(btrim(coalesce(details, ''))) >= 3
+  and coalesce(status, 'pendiente') = 'pendiente'
 );
 
 create policy "Admin can read contact messages"
