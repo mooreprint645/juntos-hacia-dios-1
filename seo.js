@@ -29,16 +29,18 @@
     const script = document.createElement("script");
     script.id = id;
     script.type = "application/ld+json";
-    script.textContent = JSON.stringify(data);
+    script.textContent = JSON.stringify(data, (_, value) => value === undefined || value === "" ? undefined : value);
     document.head.append(script);
   };
 
-  function setPage({ title, description, type = "website", image = imageUrl() } = {}) {
+  function setPage({ title, description, type = "website", image = imageUrl(), keywords = "" } = {}) {
     const cleanTitle = String(title || document.title || DEFAULT_TITLE).trim();
     const cleanDescription = String(description || document.querySelector('meta[name="description"]')?.content || DEFAULT_DESCRIPTION).trim();
     const url = location.href;
     document.title = cleanTitle;
     ensureMeta("name", "description", cleanDescription);
+    ensureMeta("name", "robots", "index,follow");
+    ensureMeta("name", "keywords", keywords);
     ensureMeta("property", "og:title", cleanTitle);
     ensureMeta("property", "og:description", cleanDescription);
     ensureMeta("property", "og:type", type);
@@ -58,24 +60,39 @@
       name: DEFAULT_TITLE,
       url: location.origin,
       inLanguage: "es-MX",
-      description: DEFAULT_DESCRIPTION
+      description: DEFAULT_DESCRIPTION,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${location.origin}${location.pathname.replace(/[^/]*$/, "")}canciones.html?q={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
     });
   }
 
-  function setSong({ title, description, artist, tone, type } = {}) {
-    const heading = `${title || "Canción"} | ${DEFAULT_TITLE}`;
-    const copy = description || `Letra, acordes${tone ? ` y tono ${tone}` : ""} de ${title || "esta canción"} en Juntos Hacia Dios.`;
-    setPage({ title: heading, description: copy, type: "music.song" });
+  function setSong({ title, description, artist, tone, type, categories = [] } = {}) {
+    const cleanTitle = String(title || "Canción").trim();
+    const cleanArtist = String(artist || "").replace(/^Por\s+/i, "").trim();
+    const artistPrefix = cleanArtist && !/canción del cancionero/i.test(cleanArtist) ? `${cleanArtist} - ` : "";
+    const heading = `${artistPrefix}${cleanTitle} | Letra y acordes | ${DEFAULT_TITLE}`;
+    const catText = Array.isArray(categories) && categories.length ? ` Categorías: ${categories.join(", ")}.` : "";
+    const copy = description || `${cleanArtist ? `${cleanTitle} de ${cleanArtist}. ` : ""}Letra, acordes${tone ? ` y tono ${tone}` : ""} para cantar y tocar en comunidad.${catText}`;
+    setPage({
+      title: heading,
+      description: copy,
+      type: "music.song",
+      keywords: [cleanTitle, cleanArtist, tone && `tono ${tone}`, "letra", "acordes", "cantos católicos", "cantos cristianos", ...(categories || [])].filter(Boolean).join(", ")
+    });
     replaceJsonLd("jhdItemSchema", {
       "@context": "https://schema.org",
       "@type": "MusicRecording",
-      name: title || "Canción",
+      name: cleanTitle,
       url: location.href,
       inLanguage: "es-MX",
-      byArtist: artist ? { "@type": "MusicGroup", name: artist } : undefined,
-      genre: type || undefined,
+      byArtist: cleanArtist ? { "@type": "MusicGroup", name: cleanArtist } : undefined,
+      genre: type || (categories || []).join(", ") || undefined,
       musicalKey: tone || undefined,
-      description: copy
+      description: copy,
+      isAccessibleForFree: true
     });
   }
 
