@@ -1,0 +1,38 @@
+name: Static quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './node_modules/*' -print0)
+      - name: Check required public files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f Supabase.js
+          test -f robots.txt
+          test -f sitemap.xml
+      - name: Reject service-role secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude='*.md' '(service_role|sb_secret_)' .; then
+            echo 'A private Supabase key appears to be committed.' >&2
+            exit 1
+          fi
