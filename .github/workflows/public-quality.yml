@@ -34,6 +34,10 @@ jobs:
 
           root = Path('.')
           failures = []
+          optimized_pages = {
+              'index.html', 'canciones.html', 'cancion.html', 'artistas.html',
+              'artista.html', 'categorias.html', 'albumes.html', 'donaciones.html'
+          }
 
           class PageParser(HTMLParser):
               def __init__(self, path):
@@ -78,19 +82,25 @@ jobs:
                   if not target.exists():
                       failures.append(f'{page}: missing local asset {local!r}')
 
+              if page.name not in optimized_pages:
+                  continue
+
               script_names = [src.split('?', 1)[0] for src, _ in parser.scripts]
-              if 'Supabase.js' in script_names:
-                  try:
-                      sdk_index = next(i for i, name in enumerate(script_names) if '@supabase/supabase-js' in name)
-                      client_index = script_names.index('Supabase.js')
-                  except (StopIteration, ValueError):
-                      failures.append(f'{page}: incomplete Supabase script chain')
-                  else:
-                      if sdk_index >= client_index:
-                          failures.append(f'{page}: Supabase SDK must load before Supabase.js')
-                      for index in (sdk_index, client_index):
-                          if not parser.scripts[index][1]:
-                              failures.append(f'{page}: Supabase scripts must use defer')
+              try:
+                  sdk_index = next(i for i, name in enumerate(script_names) if '@supabase/supabase-js' in name)
+                  guard_index = script_names.index('supabase-cdn-guard.js') if 'supabase-cdn-guard.js' in script_names else None
+                  client_index = script_names.index('Supabase.js')
+              except (StopIteration, ValueError):
+                  failures.append(f'{page}: incomplete Supabase script chain')
+                  continue
+
+              if sdk_index >= client_index:
+                  failures.append(f'{page}: Supabase SDK must load before Supabase.js')
+              if guard_index is not None and not (sdk_index < guard_index < client_index):
+                  failures.append(f'{page}: Supabase guard must load between SDK and client')
+              for index in (sdk_index, client_index):
+                  if not parser.scripts[index][1]:
+                      failures.append(f'{page}: Supabase scripts must use defer')
 
           if not Path('.nojekyll').exists():
               failures.append('Missing .nojekyll for static GitHub Pages publishing')
