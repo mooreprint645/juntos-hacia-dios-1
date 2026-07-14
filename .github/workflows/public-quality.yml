@@ -1,0 +1,126 @@
+name: Public quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './.git/*' -print0)
+
+      - name: Validate HTML and local assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          import sys
+
+          root = Path('.')
+          failures = []
+
+          class PageParser(HTMLParser):
+              def __init__(self, path):
+                  super().__init__(convert_charrefs=True)
+                  self.path = path
+                  self.ids = set()
+                  self.refs = []
+                  self.scripts = []
+
+              def handle_starttag(self, tag, attrs):
+                  values = dict(attrs)
+                  element_id = values.get('id')
+                  if element_id:
+                      if element_id in self.ids:
+                          failures.append(f'{self.path}: duplicate id {element_id!r}')
+                      self.ids.add(element_id)
+
+                  for key in ('src', 'href'):
+                      value = values.get(key)
+                      if value:
+                          self.refs.append(value)
+
+                  if tag == 'script' and values.get('src'):
+                      self.scripts.append((values['src'], 'defer' in values))
+
+          for page in sorted(root.glob('*.html')):
+              parser = PageParser(page)
+              parser.feed(page.read_text(encoding='utf-8'))
+
+              for reference in parser.refs:
+                  parsed = urlsplit(reference)
+                  if parsed.scheme or reference.startswith('//') or reference.startswith('#'):
+                      continue
+                  local = parsed.path
+                  if not local or local.endswith('/'):
+                      continue
+                  target = (page.parent / local).resolve()
+                  try:
+                      target.relative_to(root.resolve())
+                  except ValueError:
+                      continue
+                  if not target.exists():
+                      failures.append(f'{page}: missing local asset {local!r}')
+
+              script_names = [src.split('?', 1)[0] for src, _ in parser.scripts]
+              if 'Supabase.js' in script_names:
+                  try:
+                      sdk_index = next(i for i, name in enumerate(script_names) if '@supabase/supabase-js' in name)
+                      client_index = script_names.index('Supabase.js')
+                  except (StopIteration, ValueError):
+                      failures.append(f'{page}: incomplete Supabase script chain')
+                  else:
+                      if sdk_index >= client_index:
+                          failures.append(f'{page}: Supabase SDK must load before Supabase.js')
+                      for index in (sdk_index, client_index):
+                          if not parser.scripts[index][1]:
+                              failures.append(f'{page}: Supabase scripts must use defer')
+
+          if not Path('.nojekyll').exists():
+              failures.append('Missing .nojekyll for static GitHub Pages publishing')
+
+          if failures:
+              print('\n'.join(failures), file=sys.stderr)
+              raise SystemExit(1)
+          PY
+
+      - name: Check required public entrypoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            index.html canciones.html cancion.html artistas.html artista.html \
+            categorias.html albumes.html donaciones.html acerca.html \
+            contacto.html solicitar-canto.html Supabase.js; do
+            test -f "$file"
+          done
+
+      - name: Reject private Supabase secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          pattern='sb_secret_[A-Za-z0-9_-]{20,}|SUPABASE_SERVICE_ROLE_KEY[[:space:]]*='
+          if grep -RInE \
+            --exclude-dir=.git \
+            --exclude-dir=.github \
+            --exclude='*.md' \
+            "$pattern" .; then
+            echo 'A private Supabase key appears to be committed.' >&2
+            exit 1
+          fi
