@@ -8,14 +8,18 @@
   <meta name="theme-color" content="#0f1117">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="site.webmanifest">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://bmtgfbtoyxwrrnygsqcj.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="//bmtgfbtoyxwrrnygsqcj.supabase.co">
   <link rel="stylesheet" href="style.css?v=5">
   <link rel="stylesheet" href="site-shell.css?v=5">
   <link rel="stylesheet" href="public-cards.css?v=2">
   <link rel="stylesheet" href="artist-layout.css?v=1">
   <link rel="stylesheet" href="artist-discovery.css?v=1">
   <link rel="stylesheet" href="public-accessibility.css?v=2">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="Supabase.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="Supabase.js?v=2" defer></script>
   <script src="artist-page.js?v=3" defer></script>
 </head>
 <body class="artist-profile-page">
@@ -26,7 +30,7 @@
       <div class="nav-menu" id="navMenu">
         <a href="index.html">Inicio</a>
         <a href="canciones.html">Canciones</a>
-        <a class="active" href="artistas.html">Artistas</a>
+        <a class="active" aria-current="page" href="artistas.html">Artistas</a>
         <a href="categorias.html">Categorías</a>
         <a href="albumes.html">Álbumes</a>
         <a href="acerca.html">Acerca de</a>
