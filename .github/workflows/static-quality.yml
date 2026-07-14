@@ -24,11 +24,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f index.html
-          test -f Supabase.js
-          test -f robots.txt
-          test -f sitemap.xml
-      - name: Reject service-role secrets
+          required=(index.html Supabase.js robots.txt)
+          for file in "${required[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Missing required public file: $file" >&2
+              exit 1
+            fi
+          done
+          if [[ ! -f sitemap && ! -f sitemap.xml ]]; then
+            echo "Missing sitemap or sitemap.xml" >&2
+            exit 1
+          fi
+      - name: Reject private Supabase secrets
         shell: bash
         run: |
           set -euo pipefail
