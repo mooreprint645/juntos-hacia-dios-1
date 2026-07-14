@@ -13,9 +13,9 @@
   <link rel="stylesheet" href="admin-mobile-polish.css?v=1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="Supabase.js?v=2"></script>
-  <script src="admin-access-guard.js?v=1" defer></script>
-  <script src="admin-pro.js?v=1" defer></script>
-  <script src="admin-donations-plus.js?v=1" defer></script>
+  <script src="admin-auth-controller.js?v=1" defer></script>
+  <script src="admin-pro.js?v=2" defer></script>
+  <script src="admin-donations-plus.js?v=2" defer></script>
   <script src="admin-messages.js?v=1" defer></script>
   <script src="admin-request-page.js?v=1" defer></script>
   <script src="admin-main-artist-search.js?v=3" defer></script>
@@ -44,7 +44,7 @@
         <a href="categorias.html">Categorías</a>
         <a href="albumes.html">Álbumes</a>
         <a href="donaciones.html">Donaciones</a>
-        <a class="active" href="admin.html">Admin</a>
+        <a class="active" aria-current="page" href="admin.html">Admin</a>
         <button class="theme-toggle" id="themeToggle" type="button" aria-label="Cambiar tema">🌙</button>
       </div>
     </nav>
@@ -57,12 +57,12 @@
     </section>
     <section class="admin-login-card" id="adminLoginSection">
       <h2>Entrar al panel</h2>
-      <p class="admin-note">Escribe tu correo autorizado. Recibirás un enlace seguro para iniciar sesión.</p>
+      <p class="admin-note">Escribe tu correo autorizado. Recibirás un enlace seguro que regresará directamente a este panel.</p>
       <form class="admin-form" id="adminLoginForm">
         <label>Correo<input type="email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com"></label>
         <button class="song-btn" type="submit">Enviar enlace de acceso</button>
       </form>
-      <p class="muted-text" id="adminLoginMessage"></p>
+      <p class="muted-text" id="adminLoginMessage" aria-live="polite"></p>
     </section>
     <section id="adminWorkspace" class="admin-hidden" aria-live="polite"></section>
   </main>
