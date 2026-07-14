@@ -1,0 +1,35 @@
+name: Public quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check public JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check Supabase.js
+          node --check public-loader-recovery.js
+          node --check home.js
+          node --check canciones.js
+          node --check artistas.js
+          node --check categorias.js
+          node --check albumes.js
+          node --check donaciones.js
+      - name: Check public entrypoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html canciones.html artistas.html categorias.html albumes.html donaciones.html; do
+            test -f "$file"
+            grep -q 'Supabase.js?v=3' "$file"
+          done
