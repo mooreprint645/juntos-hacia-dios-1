@@ -91,7 +91,7 @@
   form?.addEventListener("submit", requestAccess, true);
 
   const error = callbackError();
-  if (error) setMessage(`El enlace de acceso no pudo completarse: ${decodeURIComponent(error.replace(/\+/g, " "))}`, true);
+  if (error) setMessage(`El enlace de acceso no pudo completarse: ${error.replace(/\+/g, " ")}`, true);
 
   if (!db) {
     setMessage("No se pudo iniciar la conexión con Supabase.", true);
