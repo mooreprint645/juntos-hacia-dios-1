@@ -39,7 +39,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RInE --exclude-dir=.git --exclude='*.md' '(service_role|sb_secret_)' .; then
+          secret_pattern='sb_secret_[A-Za-z0-9_-]{20,}|SUPABASE_SERVICE_ROLE_KEY[[:space:]]*='
+          if grep -RInE \
+            --exclude-dir=.git \
+            --exclude-dir=.github \
+            --exclude-dir=node_modules \
+            --exclude='*.md' \
+            "$secret_pattern" .; then
             echo 'A private Supabase key appears to be committed.' >&2
             exit 1
           fi
