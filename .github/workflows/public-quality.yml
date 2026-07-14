@@ -17,19 +17,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          node --check supabase-bootstrap.js
           node --check Supabase.js
-          node --check public-loader-recovery.js
           node --check home.js
           node --check canciones.js
           node --check artistas.js
           node --check categorias.js
           node --check albumes.js
           node --check donaciones.js
-      - name: Check public entrypoints
+      - name: Check Supabase bootstrap order
         shell: bash
         run: |
           set -euo pipefail
-          for file in index.html canciones.html artistas.html categorias.html albumes.html donaciones.html; do
+          pages=(
+            index.html acerca.html admin.html albumes.html artista.html artistas.html
+            cancion.html canciones.html categorias.html contacto.html donaciones.html
+            solicitar-canto.html
+          )
+          for file in "${pages[@]}"; do
             test -f "$file"
-            grep -q 'Supabase.js?v=3' "$file"
+            grep -q 'supabase-bootstrap.js?v=1' "$file"
+            if grep -q 'src="Supabase.js' "$file"; then
+              echo "Legacy Supabase.js is still loaded by $file" >&2
+              exit 1
+            fi
           done
+      - name: Reject runtime recovery patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RIn --include='*.html' --include='*.js' 'public-loader-recovery.js' . \
+            --exclude='public-loader-recovery.js'; then
+            echo 'A runtime file still depends on the recovery patch.' >&2
+            exit 1
+          fi
