@@ -1,5 +1,5 @@
 -- Juntos Hacia Dios: hardening and performance cleanup
--- Safe, idempotent migration. No application data is deleted.
+-- Safe, repeatable migration. No application data is deleted.
 
 begin;
 
@@ -14,7 +14,7 @@ revoke all on function public.jhd_is_admin() from public;
 revoke all on function public.jhd_is_admin() from anon;
 grant execute on function public.jhd_is_admin() to authenticated;
 
--- Cover foreign keys used by joins and deletes.
+-- Cover foreign keys used by joins and cascading maintenance.
 create index if not exists admin_trash_deleted_by_idx
   on public.admin_trash (deleted_by);
 create index if not exists artist_featured_songs_song_id_idx
@@ -27,27 +27,26 @@ create index if not exists songs_category_id_idx
 -- Remove one duplicate slug index while preserving equivalent coverage.
 drop index if exists public.artists_slug_idx;
 
--- Consolidate duplicate public-read policies on core catalog tables.
+-- Consolidate duplicate policies on the public catalog.
 do $cleanup$
 declare
   target_table text;
+  old_policy text;
 begin
   foreach target_table in array array[
-    'album_songs',
-    'albums',
-    'artist_featured_songs',
-    'artists',
-    'categories',
-    'song_artists',
-    'song_capo_versions',
-    'song_categories',
-    'song_links',
-    'songs'
+    'album_songs', 'albums', 'artist_featured_songs', 'artists', 'categories',
+    'song_artists', 'song_capo_versions', 'song_categories', 'song_links', 'songs'
   ]
   loop
-    execute format('drop policy if exists %I on public.%I', 'Public can read ' || replace(target_table, '_', ' '), target_table);
-    execute format('drop policy if exists %I on public.%I', 'jhd_read_' || target_table, target_table);
-    execute format('drop policy if exists %I on public.%I', 'JHD admin writes', target_table);
+    foreach old_policy in array array[
+      'JHD admin writes', 'JHD admin insert', 'JHD admin update', 'JHD admin delete',
+      'Public can read ' || target_table,
+      'Public can read ' || replace(target_table, '_', ' '),
+      'jhd_read_' || target_table
+    ]
+    loop
+      execute format('drop policy if exists %I on public.%I', old_policy, target_table);
+    end loop;
 
     execute format(
       'create policy %I on public.%I for insert to authenticated with check ((select public.jhd_is_admin()))',
@@ -65,7 +64,7 @@ begin
 end
 $cleanup$;
 
--- Replace row-by-row JWT evaluation in the remaining admin policies.
+-- Home recommendations: one public read policy plus centralized admin writes.
 drop policy if exists "Authorized admin manages home recommendations" on public.home_recommendations;
 create policy "Authorized admin manages home recommendations"
   on public.home_recommendations
@@ -74,6 +73,7 @@ create policy "Authorized admin manages home recommendations"
   using ((select public.jhd_is_admin()))
   with check ((select public.jhd_is_admin()));
 
+-- Site content: public reads remain unchanged; writes use the admin table.
 drop policy if exists "Admin can insert site content" on public.site_content;
 create policy "Admin can insert site content"
   on public.site_content
